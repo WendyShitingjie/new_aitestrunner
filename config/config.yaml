@@ -1,0 +1,93 @@
+# AI测试框架配置文件
+
+# 知识库配置
+knowledge_base:
+  b_tree_path: "aiqc/knowledge/business-tree"
+  a_tree_path: "aiqc/knowledge/application-trees"
+
+# 数据库配置
+database:
+  copilot:
+    host: "cjjcrm.db.ali-bj-sit01.shuheo.net"
+    port: 3306
+    user: "sit_user_05672c7"
+    password: "sit_user_05672c7_9fdcda"
+    database: "copilot"
+
+  datahub:
+    host: "cjjloan.db.ali-bj-sit01.shuheo.net"
+    port: 3306
+    user: "shuhe_testin_dept"
+    password: "sit_user_d1146cc_73dfbc"
+    database: "datahub"
+
+  ares:
+    host: "cjjloan.db.ali-bj-sit01.shuheo.net"
+    port: 3306
+    user: "shuhe_testin_dept"
+    password: "sit_user_d1146cc_73dfbc"
+    database: "ares"
+
+# AI服务配置
+ai_service:
+  provider: "openai"  # openai, anthropic, custom
+  api_key: "your_api_key"
+  model: "gpt-4"
+  base_url: "https://api.openai.com/v1"
+  timeout: 60
+
+# http_api配置
+http_api:
+  copilot:
+    base_url: "http://copilot.apps01.ali-bj-sit03.shuheo.net"
+    timeout: 60
+  scheduler:
+    base_url: "http://schedulerplus.apps01.ali-bj-sit03.shuheo.net"
+    timeout: 60
+  ares:
+    base_url: "http://ares.apps01.ali-bj-sit03.shuheo.net"
+    timeout: 60
+  aresplus:
+    base_url: "http://aresplus.apps01.ali-bj-sit03.shuheo.net"
+    timeout: 60
+
+# JOB配置
+job:
+  scheduler_url: "http://schedulerplus.apps01.ali-bj-sit03.shuheo.net"
+  default_uid: "347b7901-e566-4a77-9356-bf14f53ffbb9"
+
+# 消息队列配置
+mq:
+  kafka:
+    bootstrap_servers: "localhost:9092"
+    group_id: "xxxx"
+
+# Redis配置
+redis:
+  host: "localhost"
+  port: 6379
+  db: 0
+  password: null
+
+# 执行配置
+execution:
+  max_retry: 3
+  retry_delay: 2
+  timeout: 300
+  parallel_enabled: true
+  max_parallel_workers: 5
+
+# 报告配置
+report:
+  output_dir: "reports"
+  format: "html"  # html, json, markdown
+  include_screenshots: false
+  include_logs: true
+
+# 日志配置
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  file: "logs/test.log"
+  rotation: "100 MB"
+  retention: "30 days"
+

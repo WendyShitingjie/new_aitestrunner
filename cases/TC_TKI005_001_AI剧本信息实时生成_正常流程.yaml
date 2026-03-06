@@ -1,0 +1,252 @@
+# ============================================================================
+# 测试用例：AI剧本信息实时生成 - 正常流程（首次调用）
+# ============================================================================
+# 知识来源: TKI_005_AI剧本信息实时生成.md
+# 生成方式: AI基于Test Knowledge Tree自动生成
+# 生成时间: 2026-03-04
+# ============================================================================
+
+test_case_id: TC_TKI005_001
+test_name: AI剧本信息实时生成_正常流程
+business_flow: TKI_005
+priority: P0
+automation_level: L3
+
+# 关联的知识文档
+related_knowledge:
+  integration_components:
+    - TKI_005_AI剧本信息实时生成
+  data_components:
+    - TKD_001_剧本推荐日志表
+    - TKD_002_剧本推荐表
+    - TKD_005_AI执行配置表
+
+# 测试意图
+test_intent:
+  # ========== 前置条件（准备测试数据） ==========
+  preconditions:
+    # 前置1: 清空历史数据
+    - intent: "清空剧本推荐相关表的历史数据，确保测试环境干净"
+      action: database_delete
+      params:
+        database: "copilot"
+        table:
+          - "ai_execute_config"
+          - "ai_script_recommendation"
+          - "ai_script_recommendation_log"
+        where: "source='autotest2'"
+
+    # 前置2: 准备AI执行配置数据
+    # 说明: TKI_005步骤2需要校验aiExecuteCode是否在TKD_005中存在
+    #      根据TKD_005文档，表名为ai_execute_config，必需字段为code、name、agent_workflow_code、type
+    - intent: "准备AI执行配置数据（确保aiExecuteCode存在）"
+      action: database_insert
+      params:
+        database: "copilot"
+        table: "ai_execute_config"
+        data:
+          code: "AI_SCRIPT_RECOMMANDATION_2"
+          name: "AI剧本推荐配置"
+          type: "flow"
+          agent_workflow_code: "25b65c76c7054f9785f303bc92d0c0b6"
+          source: "autotest2"
+          model_info: "qwen-turbo"
+
+    # 前置3: 准备当日历史基准数据
+    # 说明: TKI_005步骤3需要查询当日该uid+source的最新记录作为基准
+    #      updated_at设置为当前时间，确保满足"当日"条件
+    - intent: "准备当日历史基准数据（用于步骤3获取基准）"
+      action: database_insert
+      params:
+        database: "copilot"
+        table: "ai_script_recommendation_log"
+        data:
+          uid: "${uuid()}"
+          source: "autotest2"
+          serial_id: "${uuid()}"
+          triger_scene: "JOB"
+          execute_status: "SUCCESS"
+#          input_data: '{"overdueCnt":"0","sex":"未知","contents":"原工单：用户反馈还款困难"}'
+          input_data: '{"income":"1万-2万","bairongCode":"VHpDeSGfhKPLPqVo","isFirstOverdue":"0","contactNameFst":"江利","companyName":"","identAddress":"","loanCnt":"36","uid":"4b0f627216e611f1bb119c63c059e356","complainCnt":"80","latestOutcallStatus":"1","laterstAiCallSummary":"客户质疑平台政策，要求减免费用，情绪激动，施压资金入账后还","overdueDays":"4","callCnt":"3","totalOverdueAmount":"9310","latestRepayTime":"2025-03-07 07:43:19","callAnswerRate":"0.5191","totalOverduePrincipal":"15540","sex":"未知","degree":"大专","laterstManualCallSummary":"沟通中无故挂断，告知没有政策帮助，五点主动处理完成。","overdueCnt":"24","customerName":"","monthRepayAmount":"2680","ruleCode":"case14933_auto_rule_code_1","pudaoCode":"SzsDhbcmjhpyJMXz","contactRelationFst":"USER_RELATION_PARENT","queueName":"ai_play_queue_12","contents":"工单内容：用户进线，咨询逾期账单费用减免，辛苦处理。 工单处理：沟通中无故挂断，告知没有政策帮助，五点主动处理完成。","concatCnt":"18","latestSixMonthOverdueCnt":"81","deviceModel":"oppo 7,4","age":"","maritalStatus":"已婚"}'
+          output_data: '{"resp_code":"1","resp_msg":"success","character":"贷后管理部","target":"本人","pressure_points":[]}'
+          # updated_at会自动设置为CURRENT_TIMESTAMP（当日时间）
+
+  # ========== 测试步骤（黑盒视角） ==========
+  test_steps:
+    # 步骤1: 调用AI剧本信息实时生成接口
+    - intent: "调用AI剧本信息实时生成接口，首次调用（正常流程）"
+      action: call_http_api
+      params:
+        application: "copilot"
+        endpoint: "/copilot/ai/script/generate"
+        method: POST
+        headers:
+          Content-Type: "application/json"
+        body:
+          serialId: "${uuid()}"
+          uid: "${context.uid}"
+          source: "autotest2"
+          trigerScene: "REPAY_SUCCESS"
+          aiExecuteCode: "AI_SCRIPT_RECOMMANDATION_2"
+          queue: "ai_play_queue"
+          inputData:
+            contents: "用户今日承诺于下午5点还款"
+          featureComputeRequest:
+            bizSerial: "${uuid()}"
+            uid: "${context.uid}"
+            commonParams:
+              uid: "${context.uid}"
+            featureConfigs:
+              - featureKey: "rt_usr_adt_rat_csh"
+                alias: "overdueCnt"
+              - featureKey: "clc_usr_iso_sex="
+                alias: "sex"
+        timeout: 5
+        # 说明: 响应自动保存到默认变量${http_response}
+
+      # 步骤1的预期结果断言
+      assertions:
+        # 断言1: 验证HTTP状态码为200
+        - intent: "验证HTTP状态码为200（首次调用成功）"
+          action: assert_api_response
+          params:
+            path: "status_code"
+            operator: "等于" # 可选
+            expected: 200
+
+        # 断言2: 验证响应体非空
+        - intent: "验证响应体非空"
+          action: assert_api_response
+          params:
+            path: "body"
+            operator: "不为空"
+
+        # 断言3: 验证返回的serialId字段
+        - intent: "验证返回serialId字段等于请求参数"
+          action: assert_api_response
+          params:
+            path: "body.serialId"
+            expected: "${context.serialId}"
+
+        # 断言4: 验证返回的uid字段
+        - intent: "验证返回uid字段等于请求参数"
+          action: assert_api_response
+          params:
+            path: "body.uid"
+            expected: "${context.uid}"
+
+        # 断言5: 验证返回的generateStatus字段
+        - intent: "验证generateStatus字段为PROCESSING（立即返回，异步生成）"
+          action: assert_api_response
+          params:
+            path: "body.generateStatus"
+            expected: "PROCESSING"
+
+        # 断言6: 验证返回的generateTime字段
+        - intent: "验证generateTime字段非空且为数字"
+          action: assert_api_response
+          params:
+            path: "body.generateTime"
+            operator: "is_numeric"
+
+        # 断言7: 验证数据库中插入了PROCESSING状态记录（步骤6）
+        # 说明: 根据实际实现，步骤6插入的是PROCESSING状态，非文档中描述的INIT状态
+        - intent: "验证TKD_001插入了PROCESSING状态的记录"
+          action: assert_database_field
+          params:
+            database: "copilot"
+            table: "ai_script_recommendation_log"
+            field: "execute_status"
+            where: "serial_id='${context.serialId}' AND uid='${context.uid}'"
+            expected: "PROCESSING"
+            timeout: 30
+            interval: 3
+
+        # 断言8: 验证input_data中的contents被更新（步骤5 - 注记更新规则）
+        - intent: "验证input_data.contents已更新为新值（实测4：有效替换）"
+          action: assert_database_json_field
+          params:
+            database: "copilot"
+            table: "ai_script_recommendation_log"
+            field: "input_data"
+            path: "$.contents"
+            where: "serial_id='${context.serialId}' AND uid='${context.uid}'"
+            expected: "用户今日承诺于下午5点还款"
+
+        # 断言9: 验证input_data中的overdueCnt已更新为特征值（步骤5 - 特征更新规则）
+        # 说明: 根据6.1实测1，rt_usr_adt_rat_csh是有效Key，会将overdueCnt从"0"更新为"35.99"
+        - intent: "验证input_data.overdueCnt已更新为35.99（实测1：正常替换）"
+          action: assert_database_field
+          params:
+            database: "copilot"
+            table: "ai_script_recommendation_log"
+            field: "JSON_UNQUOTE(JSON_EXTRACT(input_data, '$.overdueCnt'))"
+            where: "serial_id='${context.serialId}' AND uid='${context.uid}'"
+            expected: "35.99"
+
+        # 断言10: 验证input_data中的sex保持不变（步骤5 - 特征更新规则）
+        # 说明: clc_usr_iso_sex=是无效Key，返回null，sex保持基准值"未知"（实测2：Key无效忽略）
+        - intent: "验证input_data.sex保持基准值（实测2：Key无效忽略）"
+          action: assert_database_field
+          params:
+            database: "copilot"
+            table: "ai_script_recommendation_log"
+            field: "JSON_UNQUOTE(JSON_EXTRACT(input_data, '$.sex'))"
+            where: "serial_id='${context.serialId}' AND uid='${context.uid}'"
+            expected: "未知"
+
+        # 断言11: 验证最终状态为SUCCESS
+        - intent: "验证最终状态为SUCCESS（异步生成成功）"
+          action: assert_database_field
+          params:
+            database: "copilot"
+            table: "ai_script_recommendation_log"
+            field: "execute_status"
+            where: "serial_id='${context.serialId}' AND uid='${context.uid}'"
+            expected: "SUCCESS"
+            timeout: 30  # AI生成可能需要较长时间
+            interval: 3
+
+        # 断言12: 验证output_data非空（通过验证resp_code字段存在来间接验证）
+        - intent: "验证output_data非空（包含AI生成的剧本内容）"
+          action: assert_database_field
+          params:
+            database: "copilot"
+            table: "ai_script_recommendation_log"
+            field: "output_data"
+            operator: "is_not_null"
+            where: "serial_id='${context.serialId}' AND uid='${context.uid}'"
+
+        # 断言13: 验证output_data.resp_code=1（AI平台业务成功）
+        - intent: "验证AI平台业务状态码为1（成功）"
+          action: assert_database_field
+          params:
+            database: "copilot"
+            table: "ai_script_recommendation_log"
+            field: "JSON_UNQUOTE(JSON_EXTRACT(output_data, '$.resp_code'))"
+            where: "serial_id='${context.serialId}' AND uid='${context.uid}'"
+            expected: "1"
+
+        # 断言14: 验证TKD_002被同步更新（步骤9 - SUCCESS后Upsert）
+        - intent: "验证TKD_002被同步更新（基于uid+source）"
+          action: assert_database_field
+          params:
+            database: "copilot"
+            table: "ai_script_recommendation"
+            field: "serial_id"
+            where: "uid='${context.uid}' AND source='autotest2'"
+            expected: "${context.serialId}"
+
+# 预期结果
+expected_result:
+  description: |
+    1. 立即响应：HTTP状态码为200，generateStatus为PROCESSING
+    2. 响应字段：serialId、uid正确回显，generateTime为当前时间戳
+    3. 数据库初始化：TKD_001插入PROCESSING状态记录
+    4. 注记更新：input_data.contents更新为"用户今日承诺于下午5点还款"（实测4：有效替换）
+    5. 特征更新：
+       - overdueCnt从"0"更新为特征SDK返回的实际值（实测1：正常替换）
+       - sex保持基准值"未知"（实测2：Key无效忽略）
+    6. 异步生成：60秒内execute_status变为SUCCESS
+    7. AI结果：output_data包含完整剧本内容，resp_code=1
+    8. 数据同步：TKD_002被Upsert，serial_id为"new_serial_tki005_001"

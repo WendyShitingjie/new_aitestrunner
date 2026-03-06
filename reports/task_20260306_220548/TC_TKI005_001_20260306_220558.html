@@ -1,0 +1,1912 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试报告 - TC_TKI005_001</title>
+    <style>
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .info-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .info-card {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 20px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .info-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+
+        .card-icon {
+            font-size: 36px;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .card-content {
+            flex: 1;
+        }
+
+        .card-label {
+            font-size: 12px;
+            opacity: 0.85;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .card-value {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+
+        .card-subtitle {
+            font-size: 13px;
+            opacity: 0.75;
+        }
+
+        .coverage-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .coverage-section h3 {
+            margin: 0 0 15px 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .flow-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .flow-card {
+            padding: 18px 20px;
+        }
+
+        .flow-main {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .flow-icon {
+            font-size: 24px;
+        }
+
+        .flow-info {
+            flex: 1;
+        }
+
+        .flow-label {
+            font-size: 11px;
+            color: #6b7280;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .flow-id-name {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .flow-badge {
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            font-size: 13px;
+            padding: 4px 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 5px;
+            white-space: nowrap;
+        }
+
+        .flow-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .toggle-rules-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            color: #374151;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .toggle-rules-btn:hover {
+            background: #e5e7eb;
+            border-color: #d1d5db;
+        }
+
+        .toggle-icon {
+            font-size: 10px;
+            transition: transform 0.2s;
+        }
+
+        .rules-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-top: 12px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .rule-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: #f9fafb;
+            border-radius: 6px;
+            border-left: 3px solid #667eea;
+            transition: all 0.2s;
+        }
+
+        .rule-item:hover {
+            background: #f3f4f6;
+            transform: translateX(3px);
+            border-left-color: #764ba2;
+        }
+
+        .rule-badge {
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            font-size: 11px;
+            padding: 4px 10px;
+            background: #e0e7ff;
+            color: #4f46e5;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        .rule-text {
+            color: #4b5563;
+            font-size: 13px;
+            flex: 1;
+        }
+
+        .no-rules {
+            text-align: center;
+            color: #9ca3af;
+            font-style: italic;
+            padding: 20px;
+            font-size: 13px;
+        }
+
+        .status-pass {
+            color: #10b981;
+        }
+
+        .status-fail {
+            color: #ef4444;
+        }
+
+        .statistics {
+            padding: 30px;
+            background: #f9fafb;
+        }
+
+        .statistics h2 {
+            color: #1f2937;
+            margin-bottom: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 4px solid #667eea;
+        }
+
+        .stat-card.stat-success {
+            border-left-color: #10b981;
+        }
+
+        .stat-card.stat-fail {
+            border-left-color: #ef4444;
+        }
+
+        .stat-card.stat-rate {
+            border-left-color: #f59e0b;
+        }
+
+        .stat-number {
+            font-size: 36px;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .section {
+            padding: 30px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .section h2 {
+            color: #1f2937;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-expand {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-expand:hover {
+            background: #059669;
+        }
+
+        .btn-collapse {
+            background: #6b7280;
+            color: white;
+        }
+
+        .btn-collapse:hover {
+            background: #4b5563;
+        }
+
+        .execution-items {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .execution-item {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .execution-item.item-success {
+            border-left: 4px solid #10b981;
+        }
+
+        .execution-item.item-fail {
+            border-left: 4px solid #ef4444;
+        }
+
+        .execution-item.item-unknown {
+            border-left: 4px solid #f59e0b;
+        }
+
+        .collapsible-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            background: #f9fafb;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.2s;
+        }
+
+        .collapsible-header:hover {
+            background: #f3f4f6;
+        }
+
+        .collapsible-header.expanded {
+            background: #e5e7eb;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .toggle-icon {
+            font-size: 12px;
+            color: #6b7280;
+            min-width: 16px;
+        }
+
+        .item-index {
+            font-weight: bold;
+            color: #1f2937;
+            min-width: 80px;
+        }
+
+        .item-intent {
+            color: #374151;
+            flex: 1;
+        }
+
+        .item-status {
+            font-weight: bold;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            background: white;
+        }
+
+        .collapsible-content {
+            display: none;
+            padding: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .item-body {
+            padding: 0;
+        }
+
+        .sub-assertions {
+            margin-top: 15px;
+            padding-left: 20px;
+            border-left: 3px solid #e5e7eb;
+        }
+
+        .sub-assertions-title {
+            font-weight: bold;
+            color: #6b7280;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .item-row {
+            display: flex;
+            margin-bottom: 10px;
+            align-items: flex-start;
+        }
+
+        .item-label {
+            min-width: 100px;
+            font-weight: bold;
+            color: #6b7280;
+        }
+
+        .item-value {
+            flex: 1;
+            color: #1f2937;
+        }
+
+        .item-value code {
+            background: #f3f4f6;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #667eea;
+        }
+
+        .item-details {
+            margin-top: 15px;
+        }
+
+        details {
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 10px;
+            background: #f9fafb;
+        }
+
+        summary {
+            cursor: pointer;
+            font-weight: bold;
+            color: #667eea;
+            user-select: none;
+        }
+
+        summary:hover {
+            color: #764ba2;
+        }
+
+        .details-content {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        pre {
+            background: #1f2937;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .error-message {
+            margin-top: 15px;
+            padding: 15px;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 6px;
+            color: #991b1b;
+        }
+
+        .error-message strong {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .error-message pre {
+            background: #fee2e2;
+            color: #991b1b;
+            margin-top: 10px;
+        }
+
+        .footer {
+            padding: 20px 30px;
+            background: #f9fafb;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .footer p {
+            margin: 5px 0;
+        }
+
+    </style>
+    <script>
+        
+        function toggleItem(id) {
+            const content = document.getElementById(id);
+            const header = content.previousElementSibling;
+            const icon = header.querySelector('.toggle-icon');
+
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                icon.textContent = '▼';
+                header.classList.add('expanded');
+            } else {
+                content.style.display = 'none';
+                icon.textContent = '▶';
+                header.classList.remove('expanded');
+            }
+        }
+
+        function expandAll() {
+            document.querySelectorAll('.collapsible-content').forEach(content => {
+                content.style.display = 'block';
+                const header = content.previousElementSibling;
+                const icon = header.querySelector('.toggle-icon');
+                icon.textContent = '▼';
+                header.classList.add('expanded');
+            });
+        }
+
+        function collapseAll() {
+            document.querySelectorAll('.collapsible-content').forEach(content => {
+                content.style.display = 'none';
+                const header = content.previousElementSibling;
+                const icon = header.querySelector('.toggle-icon');
+                icon.textContent = '▶';
+                header.classList.remove('expanded');
+            });
+        }
+
+        function toggleRules() {
+            const container = document.getElementById('rulesContainer');
+            const icon = document.getElementById('toggleIcon');
+            const btn = document.getElementById('toggleRulesBtn');
+
+            if (container.style.display === 'none') {
+                container.style.display = 'block';
+                icon.textContent = '▼';
+                btn.classList.add('expanded');
+            } else {
+                container.style.display = 'none';
+                icon.textContent = '▶';
+                btn.classList.remove('expanded');
+            }
+        }
+        
+    </script>
+</head>
+<body>
+    <div class="container">
+        <!-- 报告头部 -->
+        
+        <div class="header">
+            <h1>🧪 AI测试框架 - 测试报告</h1>
+
+            <!-- 基本信息卡片 -->
+            <div class="info-cards">
+                <div class="info-card">
+                    <div class="card-icon">📋</div>
+                    <div class="card-content">
+                        <div class="card-label">测试用例</div>
+                        <div class="card-value">TC_TKI005_001</div>
+                        <div class="card-subtitle">AI剧本信息实时生成_正常流程</div>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <div class="card-icon">✅</div>
+                    <div class="card-content">
+                        <div class="card-label">执行状态</div>
+                        <div class="card-value status-pass">PASS</div>
+                        <div class="card-subtitle">耗时 10.66 秒</div>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <div class="card-icon">⏰</div>
+                    <div class="card-content">
+                        <div class="card-label">执行时间</div>
+                        <div class="card-value">2026-03-06 22:05:48</div>
+                        <div class="card-subtitle">至 2026-03-06 22:05:58</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 业务覆盖信息 -->
+            
+        <div class="coverage-section">
+            <h3>📊 业务覆盖范围</h3>
+            <div class="flow-container">
+                <div class="flow-card">
+                    <!-- 业务流程头部 -->
+                    <div class="flow-main">
+                        <div class="flow-icon">🔄</div>
+                        <div class="flow-info">
+                            <div class="flow-label">业务流程</div>
+                            <div class="flow-id-name">
+                                <span class="flow-badge">TKI_005</span>
+                                <span class="flow-name">未知流程</span>
+                            </div>
+                        </div>
+                        <button class="toggle-rules-btn" onclick="toggleRules()" id="toggleRulesBtn">
+                            <span class="toggle-icon" id="toggleIcon">▼</span>
+                            <span class="toggle-text">业务规则 (0)</span>
+                        </button>
+                    </div>
+
+                    <!-- 业务规则列表（可折叠） -->
+                    <div class="rules-list" id="rulesContainer">
+                        <div class="no-rules">暂无业务规则</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        </div>
+        
+
+        <!-- 执行统计 -->
+        
+        <div class="statistics">
+            <h2>📊 执行统计</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">18</div>
+                    <div class="stat-label">总执行项</div>
+                </div>
+                <div class="stat-card stat-success">
+                    <div class="stat-number">18</div>
+                    <div class="stat-label">成功</div>
+                </div>
+                <div class="stat-card stat-fail">
+                    <div class="stat-number">0</div>
+                    <div class="stat-label">失败</div>
+                </div>
+                <div class="stat-card stat-rate">
+                    <div class="stat-number">100.0%</div>
+                    <div class="stat-label">通过率</div>
+                </div>
+            </div>
+        </div>
+        
+
+        <!-- 前置条件 -->
+        
+        <div class="section">
+            <h2>
+                <span>🔧 前置条件 (3项)</span>
+                <div class="section-controls">
+                    <button class="btn btn-expand" onclick="expandAll()">全部展开</button>
+                    <button class="btn btn-collapse" onclick="collapseAll()">全部收起</button>
+                </div>
+            </h2>
+            <div class="execution-items">
+                
+        <div class="execution-item item-success">
+            <div class="collapsible-header" onclick="toggleItem('precond_0_content')">
+                <div class="header-left">
+                    <span class="toggle-icon">▶</span>
+                    <span class="item-index">前置条件 #1</span>
+                    <span class="item-intent">清空剧本推荐相关表的历史数据，确保测试环境干净</span>
+                </div>
+                <div class="item-status">✅ 成功</div>
+            </div>
+            <div id="precond_0_content" class="collapsible-content">
+                
+        <div class="item-row">
+            <span class="item-label">使用动作:</span>
+            <span class="item-value"><code>database_delete</code></span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">开始时间:</span>
+            <span class="item-value">22:05:48.108</span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">结束时间:</span>
+            <span class="item-value">22:05:48.524</span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">执行耗时:</span>
+            <span class="item-value">0.416 秒</span>
+        </div>
+        <div class="item-details">
+            <details>
+                <summary>📋 输入参数</summary>
+                <div class="details-content">
+                    <pre>{
+  &quot;database&quot;: &quot;copilot&quot;,
+  &quot;table&quot;: [
+    &quot;ai_execute_config&quot;,
+    &quot;ai_script_recommendation&quot;,
+    &quot;ai_script_recommendation_log&quot;
+  ],
+  &quot;where&quot;: &quot;source=&#39;autotest2&#39;&quot;
+}</pre>
+                </div>
+            </details>
+        </div>
+        <div class="item-details">
+            <details>
+                <summary>📤 执行结果</summary>
+                <div class="details-content">
+                    <pre>{
+  &quot;status&quot;: &quot;SUCCESS&quot;,
+  &quot;total_deleted_count&quot;: 4,
+  &quot;detail&quot;: {
+    &quot;ai_execute_config&quot;: {
+      &quot;status&quot;: &quot;SUCCESS&quot;,
+      &quot;count&quot;: 1
+    },
+    &quot;ai_script_recommendation&quot;: {
+      &quot;status&quot;: &quot;SUCCESS&quot;,
+      &quot;count&quot;: 1
+    },
+    &quot;ai_script_recommendation_log&quot;: {
+      &quot;status&quot;: &quot;SUCCESS&quot;,
+      &quot;count&quot;: 2
+    }
+  },
+  &quot;message&quot;: &quot;共从 3 张表中删除 4 条记录&quot;
+}</pre>
+                </div>
+            </details>
+        </div>
+        
+        
+            </div>
+        </div>
+        
+        <div class="execution-item item-success">
+            <div class="collapsible-header" onclick="toggleItem('precond_1_content')">
+                <div class="header-left">
+                    <span class="toggle-icon">▶</span>
+                    <span class="item-index">前置条件 #2</span>
+                    <span class="item-intent">准备AI执行配置数据（确保aiExecuteCode存在）</span>
+                </div>
+                <div class="item-status">✅ 成功</div>
+            </div>
+            <div id="precond_1_content" class="collapsible-content">
+                
+        <div class="item-row">
+            <span class="item-label">使用动作:</span>
+            <span class="item-value"><code>database_insert</code></span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">开始时间:</span>
+            <span class="item-value">22:05:48.524</span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">结束时间:</span>
+            <span class="item-value">22:05:48.594</span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">执行耗时:</span>
+            <span class="item-value">0.069 秒</span>
+        </div>
+        <div class="item-details">
+            <details>
+                <summary>📋 输入参数</summary>
+                <div class="details-content">
+                    <pre>{
+  &quot;database&quot;: &quot;copilot&quot;,
+  &quot;table&quot;: &quot;ai_execute_config&quot;,
+  &quot;data&quot;: {
+    &quot;code&quot;: &quot;AI_SCRIPT_RECOMMANDATION_2&quot;,
+    &quot;name&quot;: &quot;AI剧本推荐配置&quot;,
+    &quot;type&quot;: &quot;flow&quot;,
+    &quot;agent_workflow_code&quot;: &quot;25b65c76c7054f9785f303bc92d0c0b6&quot;,
+    &quot;source&quot;: &quot;autotest2&quot;,
+    &quot;model_info&quot;: &quot;qwen-turbo&quot;
+  }
+}</pre>
+                </div>
+            </details>
+        </div>
+        <div class="item-details">
+            <details>
+                <summary>📤 执行结果</summary>
+                <div class="details-content">
+                    <pre>{
+  &quot;status&quot;: &quot;SUCCESS&quot;,
+  &quot;inserted_count&quot;: 1,
+  &quot;message&quot;: &quot;成功插入 1/1 条记录&quot;
+}</pre>
+                </div>
+            </details>
+        </div>
+        
+        
+            </div>
+        </div>
+        
+        <div class="execution-item item-success">
+            <div class="collapsible-header" onclick="toggleItem('precond_2_content')">
+                <div class="header-left">
+                    <span class="toggle-icon">▶</span>
+                    <span class="item-index">前置条件 #3</span>
+                    <span class="item-intent">准备当日历史基准数据（用于步骤3获取基准）</span>
+                </div>
+                <div class="item-status">✅ 成功</div>
+            </div>
+            <div id="precond_2_content" class="collapsible-content">
+                
+        <div class="item-row">
+            <span class="item-label">使用动作:</span>
+            <span class="item-value"><code>database_insert</code></span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">开始时间:</span>
+            <span class="item-value">22:05:48.594</span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">结束时间:</span>
+            <span class="item-value">22:05:48.661</span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">执行耗时:</span>
+            <span class="item-value">0.067 秒</span>
+        </div>
+        <div class="item-details">
+            <details>
+                <summary>📋 输入参数</summary>
+                <div class="details-content">
+                    <pre>{
+  &quot;database&quot;: &quot;copilot&quot;,
+  &quot;table&quot;: &quot;ai_script_recommendation_log&quot;,
+  &quot;data&quot;: {
+    &quot;uid&quot;: &quot;${uuid()}&quot;,
+    &quot;source&quot;: &quot;autotest2&quot;,
+    &quot;serial_id&quot;: &quot;${uuid()}&quot;,
+    &quot;triger_scene&quot;: &quot;JOB&quot;,
+    &quot;execute_status&quot;: &quot;SUCCESS&quot;,
+    &quot;input_data&quot;: &quot;{\&quot;income\&quot;:\&quot;1万-2万\&quot;,\&quot;bairongCode\&quot;:\&quot;VHpDeSGfhKPLPqVo\&quot;,\&quot;isFirstOverdue\&quot;:\&quot;0\&quot;,\&quot;contactNameFst\&quot;:\&quot;江利\&quot;,\&quot;companyName\&quot;:\&quot;\&quot;,\&quot;identAddress\&quot;:\&quot;\&quot;,\&quot;loanCnt\&quot;:\&quot;36\&quot;,\&quot;uid\&quot;:\&quot;4b0f627216e611f1bb119c63c059e356\&quot;,\&quot;complainCnt\&quot;:\&quot;80\&quot;,\&quot;latestOutcallStatus\&quot;:\&quot;1\&quot;,\&quot;laterstAiCallSummary\&quot;:\&quot;客户质疑平台政策，要求减免费用，情绪激动，施压资金入账后还\&quot;,\&quot;overdueDays\&quot;:\&quot;4\&quot;,\&quot;callCnt\&quot;:\&quot;3\&quot;,\&quot;totalOverdueAmount\&quot;:\&quot;9310\&quot;,\&quot;latestRepayTime\&quot;:\&quot;2025-03-07 07:43:19\&quot;,\&quot;callAnswerRate\&quot;:\&quot;0.5191\&quot;,\&quot;totalOverduePrincipal\&quot;:\&quot;15540\&quot;,\&quot;sex\&quot;:\&quot;未知\&quot;,\&quot;degree\&quot;:\&quot;大专\&quot;,\&quot;laterstManualCallSummary\&quot;:\&quot;沟通中无故挂断，告知没有政策帮助，五点主动处理完成。\&quot;,\&quot;overdueCnt\&quot;:\&quot;24\&quot;,\&quot;customerName\&quot;:\&quot;\&quot;,\&quot;monthRepayAmount\&quot;:\&quot;2680\&quot;,\&quot;ruleCode\&quot;:\&quot;case14933_auto_rule_code_1\&quot;,\&quot;pudaoCode\&quot;:\&quot;SzsDhbcmjhpyJMXz\&quot;,\&quot;contactRelationFst\&quot;:\&quot;USER_RELATION_PARENT\&quot;,\&quot;queueName\&quot;:\&quot;ai_play_queue_12\&quot;,\&quot;contents\&quot;:\&quot;工单内容：用户进线，咨询逾期账单费用减免，辛苦处理。 工单处理：沟通中无故挂断，告知没有政策帮助，五点主动处理完成。\&quot;,\&quot;concatCnt\&quot;:\&quot;18\&quot;,\&quot;latestSixMonthOverdueCnt\&quot;:\&quot;81\&quot;,\&quot;deviceModel\&quot;:\&quot;oppo 7,4\&quot;,\&quot;age\&quot;:\&quot;\&quot;,\&quot;maritalStatus\&quot;:\&quot;已婚\&quot;}&quot;,
+    &quot;output_data&quot;: &quot;{\&quot;resp_code\&quot;:\&quot;1\&quot;,\&quot;resp_msg\&quot;:\&quot;success\&quot;,\&quot;character\&quot;:\&quot;贷后管理部\&quot;,\&quot;target\&quot;:\&quot;本人\&quot;,\&quot;pressure_points\&quot;:[]}&quot;
+  }
+}</pre>
+                </div>
+            </details>
+        </div>
+        <div class="item-details">
+            <details>
+                <summary>📤 执行结果</summary>
+                <div class="details-content">
+                    <pre>{
+  &quot;status&quot;: &quot;SUCCESS&quot;,
+  &quot;inserted_count&quot;: 1,
+  &quot;message&quot;: &quot;成功插入 1/1 条记录&quot;
+}</pre>
+                </div>
+            </details>
+        </div>
+        
+        
+            </div>
+        </div>
+        
+            </div>
+        </div>
+        
+
+        <!-- 测试步骤（包含步骤下的断言） -->
+        
+        <div class="section">
+            <h2>
+                <span>🚀 测试步骤 (1项)</span>
+                <div class="section-controls">
+                    <button class="btn btn-expand" onclick="expandAll()">全部展开</button>
+                    <button class="btn btn-collapse" onclick="collapseAll()">全部收起</button>
+                </div>
+            </h2>
+            <div class="execution-items">
+                
+        <div class="execution-item item-success">
+            <div class="collapsible-header" onclick="toggleItem('step_0_content')">
+                <div class="header-left">
+                    <span class="toggle-icon">▶</span>
+                    <span class="item-index">步骤 #1</span>
+                    <span class="item-intent">调用AI剧本信息实时生成接口，首次调用（正常流程）</span>
+                </div>
+                <div class="item-status">✅ 成功</div>
+            </div>
+            <div id="step_0_content" class="collapsible-content">
+                
+        <div class="item-row">
+            <span class="item-label">使用动作:</span>
+            <span class="item-value"><code>call_http_api</code></span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">开始时间:</span>
+            <span class="item-value">22:05:48.662</span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">结束时间:</span>
+            <span class="item-value">22:05:58.768</span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">执行耗时:</span>
+            <span class="item-value">10.105 秒</span>
+        </div>
+        <div class="item-details">
+            <details>
+                <summary>📋 输入参数</summary>
+                <div class="details-content">
+                    <pre>{
+  &quot;application&quot;: &quot;copilot&quot;,
+  &quot;endpoint&quot;: &quot;/copilot/ai/script/generate&quot;,
+  &quot;method&quot;: &quot;POST&quot;,
+  &quot;headers&quot;: {
+    &quot;Content-Type&quot;: &quot;application/json&quot;
+  },
+  &quot;body&quot;: {
+    &quot;serialId&quot;: &quot;${uuid()}&quot;,
+    &quot;uid&quot;: &quot;${context.uid}&quot;,
+    &quot;source&quot;: &quot;autotest2&quot;,
+    &quot;trigerScene&quot;: &quot;REPAY_SUCCESS&quot;,
+    &quot;aiExecuteCode&quot;: &quot;AI_SCRIPT_RECOMMANDATION_2&quot;,
+    &quot;queue&quot;: &quot;ai_play_queue&quot;,
+    &quot;inputData&quot;: {
+      &quot;contents&quot;: &quot;用户今日承诺于下午5点还款&quot;
+    },
+    &quot;featureComputeRequest&quot;: {
+      &quot;bizSerial&quot;: &quot;${uuid()}&quot;,
+      &quot;uid&quot;: &quot;${context.uid}&quot;,
+      &quot;commonParams&quot;: {
+        &quot;uid&quot;: &quot;${context.uid}&quot;
+      },
+      &quot;featureConfigs&quot;: [
+        {
+          &quot;featureKey&quot;: &quot;rt_usr_adt_rat_csh&quot;,
+          &quot;alias&quot;: &quot;overdueCnt&quot;
+        },
+        {
+          &quot;featureKey&quot;: &quot;clc_usr_iso_sex=&quot;,
+          &quot;alias&quot;: &quot;sex&quot;
+        }
+      ]
+    }
+  },
+  &quot;timeout&quot;: 5
+}</pre>
+                </div>
+            </details>
+        </div>
+        <div class="item-details">
+            <details>
+                <summary>📤 执行结果</summary>
+                <div class="details-content">
+                    <pre>{
+  &quot;status&quot;: &quot;SUCCESS&quot;,
+  &quot;status_code&quot;: 200,
+  &quot;response_body&quot;: {
+    &quot;generateStatus&quot;: &quot;PROCESSING&quot;,
+    &quot;generateTime&quot;: 1772805949422,
+    &quot;serialId&quot;: &quot;07eca1c8bde143b3b1110ef478d039bd&quot;,
+    &quot;uid&quot;: &quot;0c8ea980f76a4c9ebba33d976e0a3b8f&quot;
+  },
+  &quot;response_headers&quot;: {
+    &quot;Connection&quot;: &quot;close&quot;,
+    &quot;Content-Length&quot;: &quot;147&quot;,
+    &quot;Cjj-Request-Api&quot;: &quot;copilot.AiScriptController.generateAiScript(..)&quot;,
+    &quot;Content-Type&quot;: &quot;application/json;charset=UTF-8&quot;,
+    &quot;Date&quot;: &quot;Fri, 06 Mar 2026 14:05:49 GMT&quot;
+  },
+  &quot;message&quot;: &quot;HTTP请求成功: POST http://copilot.apps01.ali-bj-sit03.shuheo.net/copilot/ai/script/generate -&gt; 200&quot;
+}</pre>
+                </div>
+            </details>
+        </div>
+        
+        
+                
+            <div class="sub-assertions">
+                <div class="sub-assertions-title">🔍 步骤断言 (14个)</div>
+                <div class="execution-items">
+                    
+        <div class="execution-item item-success">
+            <div class="collapsible-header" onclick="toggleItem('step_0_assert_0_content')">
+                <div class="header-left">
+                    <span class="toggle-icon">▶</span>
+                    <span class="item-index">断言 #1</span>
+                    <span class="item-intent">验证HTTP状态码为200（首次调用成功）</span>
+                </div>
+                <div class="item-status">✅ 成功</div>
+            </div>
+            <div id="step_0_assert_0_content" class="collapsible-content">
+                
+        <div class="item-row">
+            <span class="item-label">使用动作:</span>
+            <span class="item-value"><code>assert_api_response</code></span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">开始时间:</span>
+            <span class="item-value">22:05:49.020</span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">结束时间:</span>
+            <span class="item-value">22:05:49.022</span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">执行耗时:</span>
+            <span class="item-value">0.002 秒</span>
+        </div>
+        <div class="item-details">
+            <details>
+                <summary>📋 输入参数</summary>
+                <div class="details-content">
+                    <pre>{
+  &quot;path&quot;: &quot;status_code&quot;,
+  &quot;operator&quot;: &quot;等于&quot;,
+  &quot;expected&quot;: 200
+}</pre>
+                </div>
+            </details>
+        </div>
+        <div class="item-details">
+            <details>
+                <summary>📤 执行结果</summary>
+                <div class="details-content">
+                    <pre>{
+  &quot;status&quot;: &quot;PASS&quot;,
+  &quot;reason&quot;: &quot;[API响应断言] 校验成功：&#39;status_code&#39; 等于 &#39;200&#39;&quot;,
+  &quot;details&quot;: {
+    &quot;path&quot;: &quot;status_code&quot;,
+    &quot;actual&quot;: 200,
+    &quot;expected&quot;: 200,
+    &quot;operator&quot;: &quot;等于&quot;
+  }
+}</pre>
+                </div>
+            </details>
+        </div>
+        
+        
+            </div>
+        </div>
+        
+        <div class="execution-item item-success">
+            <div class="collapsible-header" onclick="toggleItem('step_0_assert_1_content')">
+                <div class="header-left">
+                    <span class="toggle-icon">▶</span>
+                    <span class="item-index">断言 #2</span>
+                    <span class="item-intent">验证响应体非空</span>
+                </div>
+                <div class="item-status">✅ 成功</div>
+            </div>
+            <div id="step_0_assert_1_content" class="collapsible-content">
+                
+        <div class="item-row">
+            <span class="item-label">使用动作:</span>
+            <span class="item-value"><code>assert_api_response</code></span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">开始时间:</span>
+            <span class="item-value">22:05:49.022</span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">结束时间:</span>
+            <span class="item-value">22:05:49.023</span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">执行耗时:</span>
+            <span class="item-value">0.001 秒</span>
+        </div>
+        <div class="item-details">
+            <details>
+                <summary>📋 输入参数</summary>
+                <div class="details-content">
+                    <pre>{
+  &quot;path&quot;: &quot;body&quot;,
+  &quot;operator&quot;: &quot;不为空&quot;
+}</pre>
+                </div>
+            </details>
+        </div>
+        <div class="item-details">
+            <details>
+                <summary>📤 执行结果</summary>
+                <div class="details-content">
+                    <pre>{
+  &quot;status&quot;: &quot;PASS&quot;,
+  &quot;reason&quot;: &quot;[API响应断言] 校验成功：&#39;body&#39; 不为空 &#39;None&#39;&quot;,
+  &quot;details&quot;: {
+    &quot;path&quot;: &quot;body&quot;,
+    &quot;actual&quot;: {
+      &quot;generateStatus&quot;: &quot;PROCESSING&quot;,
+      &quot;generateTime&quot;: 1772805949422,
+      &quot;serialId&quot;: &quot;07eca1c8bde143b3b1110ef478d039bd&quot;,
+      &quot;uid&quot;: &quot;0c8ea980f76a4c9ebba33d976e0a3b8f&quot;
+    },
+    &quot;expected&quot;: null,
+    &quot;operator&quot;: &quot;不为空&quot;
+  }
+}</pre>
+                </div>
+            </details>
+        </div>
+        
+        
+            </div>
+        </div>
+        
+        <div class="execution-item item-success">
+            <div class="collapsible-header" onclick="toggleItem('step_0_assert_2_content')">
+                <div class="header-left">
+                    <span class="toggle-icon">▶</span>
+                    <span class="item-index">断言 #3</span>
+                    <span class="item-intent">验证返回serialId字段等于请求参数</span>
+                </div>
+                <div class="item-status">✅ 成功</div>
+            </div>
+            <div id="step_0_assert_2_content" class="collapsible-content">
+                
+        <div class="item-row">
+            <span class="item-label">使用动作:</span>
+            <span class="item-value"><code>assert_api_response</code></span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">开始时间:</span>
+            <span class="item-value">22:05:49.023</span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">结束时间:</span>
+            <span class="item-value">22:05:49.025</span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">执行耗时:</span>
+            <span class="item-value">0.002 秒</span>
+        </div>
+        <div class="item-details">
+            <details>
+                <summary>📋 输入参数</summary>
+                <div class="details-content">
+                    <pre>{
+  &quot;path&quot;: &quot;body.serialId&quot;,
+  &quot;expected&quot;: &quot;${context.serialId}&quot;
+}</pre>
+                </div>
+            </details>
+        </div>
+        <div class="item-details">
+            <details>
+                <summary>📤 执行结果</summary>
+                <div class="details-content">
+                    <pre>{
+  &quot;status&quot;: &quot;PASS&quot;,
+  &quot;reason&quot;: &quot;[API响应断言] 校验成功：&#39;body.serialId&#39; 等于 &#39;07eca1c8bde143b3b1110ef478d039bd&#39;&quot;,
+  &quot;details&quot;: {
+    &quot;path&quot;: &quot;body.serialId&quot;,
+    &quot;actual&quot;: &quot;07eca1c8bde143b3b1110ef478d039bd&quot;,
+    &quot;expected&quot;: &quot;07eca1c8bde143b3b1110ef478d039bd&quot;,
+    &quot;operator&quot;: &quot;eq&quot;
+  }
+}</pre>
+                </div>
+            </details>
+        </div>
+        
+        
+            </div>
+        </div>
+        
+        <div class="execution-item item-success">
+            <div class="collapsible-header" onclick="toggleItem('step_0_assert_3_content')">
+                <div class="header-left">
+                    <span class="toggle-icon">▶</span>
+                    <span class="item-index">断言 #4</span>
+                    <span class="item-intent">验证返回uid字段等于请求参数</span>
+                </div>
+                <div class="item-status">✅ 成功</div>
+            </div>
+            <div id="step_0_assert_3_content" class="collapsible-content">
+                
+        <div class="item-row">
+            <span class="item-label">使用动作:</span>
+            <span class="item-value"><code>assert_api_response</code></span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">开始时间:</span>
+            <span class="item-value">22:05:49.025</span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">结束时间:</span>
+            <span class="item-value">22:05:49.026</span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">执行耗时:</span>
+            <span class="item-value">0.001 秒</span>
+        </div>
+        <div class="item-details">
+            <details>
+                <summary>📋 输入参数</summary>
+                <div class="details-content">
+                    <pre>{
+  &quot;path&quot;: &quot;body.uid&quot;,
+  &quot;expected&quot;: &quot;${context.uid}&quot;
+}</pre>
+                </div>
+            </details>
+        </div>
+        <div class="item-details">
+            <details>
+                <summary>📤 执行结果</summary>
+                <div class="details-content">
+                    <pre>{
+  &quot;status&quot;: &quot;PASS&quot;,
+  &quot;reason&quot;: &quot;[API响应断言] 校验成功：&#39;body.uid&#39; 等于 &#39;0c8ea980f76a4c9ebba33d976e0a3b8f&#39;&quot;,
+  &quot;details&quot;: {
+    &quot;path&quot;: &quot;body.uid&quot;,
+    &quot;actual&quot;: &quot;0c8ea980f76a4c9ebba33d976e0a3b8f&quot;,
+    &quot;expected&quot;: &quot;0c8ea980f76a4c9ebba33d976e0a3b8f&quot;,
+    &quot;operator&quot;: &quot;eq&quot;
+  }
+}</pre>
+                </div>
+            </details>
+        </div>
+        
+        
+            </div>
+        </div>
+        
+        <div class="execution-item item-success">
+            <div class="collapsible-header" onclick="toggleItem('step_0_assert_4_content')">
+                <div class="header-left">
+                    <span class="toggle-icon">▶</span>
+                    <span class="item-index">断言 #5</span>
+                    <span class="item-intent">验证generateStatus字段为PROCESSING（立即返回，异步生成）</span>
+                </div>
+                <div class="item-status">✅ 成功</div>
+            </div>
+            <div id="step_0_assert_4_content" class="collapsible-content">
+                
+        <div class="item-row">
+            <span class="item-label">使用动作:</span>
+            <span class="item-value"><code>assert_api_response</code></span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">开始时间:</span>
+            <span class="item-value">22:05:49.026</span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">结束时间:</span>
+            <span class="item-value">22:05:49.027</span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">执行耗时:</span>
+            <span class="item-value">0.001 秒</span>
+        </div>
+        <div class="item-details">
+            <details>
+                <summary>📋 输入参数</summary>
+                <div class="details-content">
+                    <pre>{
+  &quot;path&quot;: &quot;body.generateStatus&quot;,
+  &quot;expected&quot;: &quot;PROCESSING&quot;
+}</pre>
+                </div>
+            </details>
+        </div>
+        <div class="item-details">
+            <details>
+                <summary>📤 执行结果</summary>
+                <div class="details-content">
+                    <pre>{
+  &quot;status&quot;: &quot;PASS&quot;,
+  &quot;reason&quot;: &quot;[API响应断言] 校验成功：&#39;body.generateStatus&#39; 等于 &#39;PROCESSING&#39;&quot;,
+  &quot;details&quot;: {
+    &quot;path&quot;: &quot;body.generateStatus&quot;,
+    &quot;actual&quot;: &quot;PROCESSING&quot;,
+    &quot;expected&quot;: &quot;PROCESSING&quot;,
+    &quot;operator&quot;: &quot;eq&quot;
+  }
+}</pre>
+                </div>
+            </details>
+        </div>
+        
+        
+            </div>
+        </div>
+        
+        <div class="execution-item item-success">
+            <div class="collapsible-header" onclick="toggleItem('step_0_assert_5_content')">
+                <div class="header-left">
+                    <span class="toggle-icon">▶</span>
+                    <span class="item-index">断言 #6</span>
+                    <span class="item-intent">验证generateTime字段非空且为数字</span>
+                </div>
+                <div class="item-status">✅ 成功</div>
+            </div>
+            <div id="step_0_assert_5_content" class="collapsible-content">
+                
+        <div class="item-row">
+            <span class="item-label">使用动作:</span>
+            <span class="item-value"><code>assert_api_response</code></span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">开始时间:</span>
+            <span class="item-value">22:05:49.027</span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">结束时间:</span>
+            <span class="item-value">22:05:49.028</span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">执行耗时:</span>
+            <span class="item-value">0.001 秒</span>
+        </div>
+        <div class="item-details">
+            <details>
+                <summary>📋 输入参数</summary>
+                <div class="details-content">
+                    <pre>{
+  &quot;path&quot;: &quot;body.generateTime&quot;,
+  &quot;operator&quot;: &quot;is_numeric&quot;
+}</pre>
+                </div>
+            </details>
+        </div>
+        <div class="item-details">
+            <details>
+                <summary>📤 执行结果</summary>
+                <div class="details-content">
+                    <pre>{
+  &quot;status&quot;: &quot;PASS&quot;,
+  &quot;reason&quot;: &quot;[API响应断言] 校验成功：&#39;body.generateTime&#39; 是数字 &#39;None&#39;&quot;,
+  &quot;details&quot;: {
+    &quot;path&quot;: &quot;body.generateTime&quot;,
+    &quot;actual&quot;: 1772805949422,
+    &quot;expected&quot;: null,
+    &quot;operator&quot;: &quot;is_numeric&quot;
+  }
+}</pre>
+                </div>
+            </details>
+        </div>
+        
+        
+            </div>
+        </div>
+        
+        <div class="execution-item item-success">
+            <div class="collapsible-header" onclick="toggleItem('step_0_assert_6_content')">
+                <div class="header-left">
+                    <span class="toggle-icon">▶</span>
+                    <span class="item-index">断言 #7</span>
+                    <span class="item-intent">验证TKD_001插入了PROCESSING状态的记录</span>
+                </div>
+                <div class="item-status">✅ 成功</div>
+            </div>
+            <div id="step_0_assert_6_content" class="collapsible-content">
+                
+        <div class="item-row">
+            <span class="item-label">使用动作:</span>
+            <span class="item-value"><code>assert_database_field</code></span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">开始时间:</span>
+            <span class="item-value">22:05:49.028</span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">结束时间:</span>
+            <span class="item-value">22:05:49.093</span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">执行耗时:</span>
+            <span class="item-value">0.065 秒</span>
+        </div>
+        <div class="item-details">
+            <details>
+                <summary>📋 输入参数</summary>
+                <div class="details-content">
+                    <pre>{
+  &quot;database&quot;: &quot;copilot&quot;,
+  &quot;table&quot;: &quot;ai_script_recommendation_log&quot;,
+  &quot;field&quot;: &quot;execute_status&quot;,
+  &quot;where&quot;: &quot;serial_id=&#39;${context.serialId}&#39; AND uid=&#39;${context.uid}&#39;&quot;,
+  &quot;expected&quot;: &quot;PROCESSING&quot;,
+  &quot;timeout&quot;: 30,
+  &quot;interval&quot;: 3
+}</pre>
+                </div>
+            </details>
+        </div>
+        <div class="item-details">
+            <details>
+                <summary>📤 执行结果</summary>
+                <div class="details-content">
+                    <pre>{
+  &quot;status&quot;: &quot;PASS&quot;,
+  &quot;reason&quot;: &quot;字段 [execute_status] 校验成功 (尝试 1 次)：实际值 &#39;PROCESSING&#39; 等于 &#39;PROCESSING&#39;&quot;,
+  &quot;details&quot;: {
+    &quot;actual&quot;: &quot;PROCESSING&quot;,
+    &quot;expected&quot;: &quot;PROCESSING&quot;,
+    &quot;sql&quot;: &quot;SELECT execute_status FROM ai_script_recommendation_log WHERE serial_id=&#39;07eca1c8bde143b3b1110ef478d039bd&#39; AND uid=&#39;0c8ea980f76a4c9ebba33d976e0a3b8f&#39; LIMIT 1&quot;,
+    &quot;attempts&quot;: 1
+  }
+}</pre>
+                </div>
+            </details>
+        </div>
+        
+        
+            </div>
+        </div>
+        
+        <div class="execution-item item-success">
+            <div class="collapsible-header" onclick="toggleItem('step_0_assert_7_content')">
+                <div class="header-left">
+                    <span class="toggle-icon">▶</span>
+                    <span class="item-index">断言 #8</span>
+                    <span class="item-intent">验证input_data.contents已更新为新值（实测4：有效替换）</span>
+                </div>
+                <div class="item-status">✅ 成功</div>
+            </div>
+            <div id="step_0_assert_7_content" class="collapsible-content">
+                
+        <div class="item-row">
+            <span class="item-label">使用动作:</span>
+            <span class="item-value"><code>assert_database_json_field</code></span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">开始时间:</span>
+            <span class="item-value">22:05:49.093</span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">结束时间:</span>
+            <span class="item-value">22:05:49.162</span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">执行耗时:</span>
+            <span class="item-value">0.069 秒</span>
+        </div>
+        <div class="item-details">
+            <details>
+                <summary>📋 输入参数</summary>
+                <div class="details-content">
+                    <pre>{
+  &quot;database&quot;: &quot;copilot&quot;,
+  &quot;table&quot;: &quot;ai_script_recommendation_log&quot;,
+  &quot;field&quot;: &quot;input_data&quot;,
+  &quot;path&quot;: &quot;$.contents&quot;,
+  &quot;where&quot;: &quot;serial_id=&#39;${context.serialId}&#39; AND uid=&#39;${context.uid}&#39;&quot;,
+  &quot;expected&quot;: &quot;用户今日承诺于下午5点还款&quot;
+}</pre>
+                </div>
+            </details>
+        </div>
+        <div class="item-details">
+            <details>
+                <summary>📤 执行结果</summary>
+                <div class="details-content">
+                    <pre>{
+  &quot;status&quot;: &quot;PASS&quot;,
+  &quot;reason&quot;: &quot;JSON路径 [$.contents] 校验成功 (尝试 1 次)：实际 &#39;用户今日承诺于下午5点还款&#39;&quot;
+}</pre>
+                </div>
+            </details>
+        </div>
+        
+        
+            </div>
+        </div>
+        
+        <div class="execution-item item-success">
+            <div class="collapsible-header" onclick="toggleItem('step_0_assert_8_content')">
+                <div class="header-left">
+                    <span class="toggle-icon">▶</span>
+                    <span class="item-index">断言 #9</span>
+                    <span class="item-intent">验证input_data.overdueCnt已更新为35.99（实测1：正常替换）</span>
+                </div>
+                <div class="item-status">✅ 成功</div>
+            </div>
+            <div id="step_0_assert_8_content" class="collapsible-content">
+                
+        <div class="item-row">
+            <span class="item-label">使用动作:</span>
+            <span class="item-value"><code>assert_database_field</code></span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">开始时间:</span>
+            <span class="item-value">22:05:49.162</span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">结束时间:</span>
+            <span class="item-value">22:05:49.229</span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">执行耗时:</span>
+            <span class="item-value">0.067 秒</span>
+        </div>
+        <div class="item-details">
+            <details>
+                <summary>📋 输入参数</summary>
+                <div class="details-content">
+                    <pre>{
+  &quot;database&quot;: &quot;copilot&quot;,
+  &quot;table&quot;: &quot;ai_script_recommendation_log&quot;,
+  &quot;field&quot;: &quot;JSON_UNQUOTE(JSON_EXTRACT(input_data, &#39;$.overdueCnt&#39;))&quot;,
+  &quot;where&quot;: &quot;serial_id=&#39;${context.serialId}&#39; AND uid=&#39;${context.uid}&#39;&quot;,
+  &quot;expected&quot;: &quot;35.99&quot;
+}</pre>
+                </div>
+            </details>
+        </div>
+        <div class="item-details">
+            <details>
+                <summary>📤 执行结果</summary>
+                <div class="details-content">
+                    <pre>{
+  &quot;status&quot;: &quot;PASS&quot;,
+  &quot;reason&quot;: &quot;字段 [JSON_UNQUOTE(JSON_EXTRACT(input_data, &#39;$.overdueCnt&#39;))] 校验成功 (尝试 1 次)：实际值 &#39;35.99&#39; 等于 &#39;35.99&#39;&quot;,
+  &quot;details&quot;: {
+    &quot;actual&quot;: &quot;35.99&quot;,
+    &quot;expected&quot;: &quot;35.99&quot;,
+    &quot;sql&quot;: &quot;SELECT JSON_UNQUOTE(JSON_EXTRACT(input_data, &#39;$.overdueCnt&#39;)) FROM ai_script_recommendation_log WHERE serial_id=&#39;07eca1c8bde143b3b1110ef478d039bd&#39; AND uid=&#39;0c8ea980f76a4c9ebba33d976e0a3b8f&#39; LIMIT 1&quot;,
+    &quot;attempts&quot;: 1
+  }
+}</pre>
+                </div>
+            </details>
+        </div>
+        
+        
+            </div>
+        </div>
+        
+        <div class="execution-item item-success">
+            <div class="collapsible-header" onclick="toggleItem('step_0_assert_9_content')">
+                <div class="header-left">
+                    <span class="toggle-icon">▶</span>
+                    <span class="item-index">断言 #10</span>
+                    <span class="item-intent">验证input_data.sex保持基准值（实测2：Key无效忽略）</span>
+                </div>
+                <div class="item-status">✅ 成功</div>
+            </div>
+            <div id="step_0_assert_9_content" class="collapsible-content">
+                
+        <div class="item-row">
+            <span class="item-label">使用动作:</span>
+            <span class="item-value"><code>assert_database_field</code></span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">开始时间:</span>
+            <span class="item-value">22:05:49.229</span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">结束时间:</span>
+            <span class="item-value">22:05:49.295</span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">执行耗时:</span>
+            <span class="item-value">0.066 秒</span>
+        </div>
+        <div class="item-details">
+            <details>
+                <summary>📋 输入参数</summary>
+                <div class="details-content">
+                    <pre>{
+  &quot;database&quot;: &quot;copilot&quot;,
+  &quot;table&quot;: &quot;ai_script_recommendation_log&quot;,
+  &quot;field&quot;: &quot;JSON_UNQUOTE(JSON_EXTRACT(input_data, &#39;$.sex&#39;))&quot;,
+  &quot;where&quot;: &quot;serial_id=&#39;${context.serialId}&#39; AND uid=&#39;${context.uid}&#39;&quot;,
+  &quot;expected&quot;: &quot;未知&quot;
+}</pre>
+                </div>
+            </details>
+        </div>
+        <div class="item-details">
+            <details>
+                <summary>📤 执行结果</summary>
+                <div class="details-content">
+                    <pre>{
+  &quot;status&quot;: &quot;PASS&quot;,
+  &quot;reason&quot;: &quot;字段 [JSON_UNQUOTE(JSON_EXTRACT(input_data, &#39;$.sex&#39;))] 校验成功 (尝试 1 次)：实际值 &#39;未知&#39; 等于 &#39;未知&#39;&quot;,
+  &quot;details&quot;: {
+    &quot;actual&quot;: &quot;未知&quot;,
+    &quot;expected&quot;: &quot;未知&quot;,
+    &quot;sql&quot;: &quot;SELECT JSON_UNQUOTE(JSON_EXTRACT(input_data, &#39;$.sex&#39;)) FROM ai_script_recommendation_log WHERE serial_id=&#39;07eca1c8bde143b3b1110ef478d039bd&#39; AND uid=&#39;0c8ea980f76a4c9ebba33d976e0a3b8f&#39; LIMIT 1&quot;,
+    &quot;attempts&quot;: 1
+  }
+}</pre>
+                </div>
+            </details>
+        </div>
+        
+        
+            </div>
+        </div>
+        
+        <div class="execution-item item-success">
+            <div class="collapsible-header" onclick="toggleItem('step_0_assert_10_content')">
+                <div class="header-left">
+                    <span class="toggle-icon">▶</span>
+                    <span class="item-index">断言 #11</span>
+                    <span class="item-intent">验证最终状态为SUCCESS（异步生成成功）</span>
+                </div>
+                <div class="item-status">✅ 成功</div>
+            </div>
+            <div id="step_0_assert_10_content" class="collapsible-content">
+                
+        <div class="item-row">
+            <span class="item-label">使用动作:</span>
+            <span class="item-value"><code>assert_database_field</code></span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">开始时间:</span>
+            <span class="item-value">22:05:49.295</span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">结束时间:</span>
+            <span class="item-value">22:05:58.564</span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">执行耗时:</span>
+            <span class="item-value">9.269 秒</span>
+        </div>
+        <div class="item-details">
+            <details>
+                <summary>📋 输入参数</summary>
+                <div class="details-content">
+                    <pre>{
+  &quot;database&quot;: &quot;copilot&quot;,
+  &quot;table&quot;: &quot;ai_script_recommendation_log&quot;,
+  &quot;field&quot;: &quot;execute_status&quot;,
+  &quot;where&quot;: &quot;serial_id=&#39;${context.serialId}&#39; AND uid=&#39;${context.uid}&#39;&quot;,
+  &quot;expected&quot;: &quot;SUCCESS&quot;,
+  &quot;timeout&quot;: 30,
+  &quot;interval&quot;: 3
+}</pre>
+                </div>
+            </details>
+        </div>
+        <div class="item-details">
+            <details>
+                <summary>📤 执行结果</summary>
+                <div class="details-content">
+                    <pre>{
+  &quot;status&quot;: &quot;PASS&quot;,
+  &quot;reason&quot;: &quot;字段 [execute_status] 校验成功 (尝试 4 次)：实际值 &#39;SUCCESS&#39; 等于 &#39;SUCCESS&#39;&quot;,
+  &quot;details&quot;: {
+    &quot;actual&quot;: &quot;SUCCESS&quot;,
+    &quot;expected&quot;: &quot;SUCCESS&quot;,
+    &quot;sql&quot;: &quot;SELECT execute_status FROM ai_script_recommendation_log WHERE serial_id=&#39;07eca1c8bde143b3b1110ef478d039bd&#39; AND uid=&#39;0c8ea980f76a4c9ebba33d976e0a3b8f&#39; LIMIT 1&quot;,
+    &quot;attempts&quot;: 4
+  }
+}</pre>
+                </div>
+            </details>
+        </div>
+        
+        
+            </div>
+        </div>
+        
+        <div class="execution-item item-success">
+            <div class="collapsible-header" onclick="toggleItem('step_0_assert_11_content')">
+                <div class="header-left">
+                    <span class="toggle-icon">▶</span>
+                    <span class="item-index">断言 #12</span>
+                    <span class="item-intent">验证output_data非空（包含AI生成的剧本内容）</span>
+                </div>
+                <div class="item-status">✅ 成功</div>
+            </div>
+            <div id="step_0_assert_11_content" class="collapsible-content">
+                
+        <div class="item-row">
+            <span class="item-label">使用动作:</span>
+            <span class="item-value"><code>assert_database_field</code></span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">开始时间:</span>
+            <span class="item-value">22:05:58.564</span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">结束时间:</span>
+            <span class="item-value">22:05:58.631</span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">执行耗时:</span>
+            <span class="item-value">0.068 秒</span>
+        </div>
+        <div class="item-details">
+            <details>
+                <summary>📋 输入参数</summary>
+                <div class="details-content">
+                    <pre>{
+  &quot;database&quot;: &quot;copilot&quot;,
+  &quot;table&quot;: &quot;ai_script_recommendation_log&quot;,
+  &quot;field&quot;: &quot;output_data&quot;,
+  &quot;operator&quot;: &quot;is_not_null&quot;,
+  &quot;where&quot;: &quot;serial_id=&#39;${context.serialId}&#39; AND uid=&#39;${context.uid}&#39;&quot;
+}</pre>
+                </div>
+            </details>
+        </div>
+        <div class="item-details">
+            <details>
+                <summary>📤 执行结果</summary>
+                <div class="details-content">
+                    <pre>{
+  &quot;status&quot;: &quot;PASS&quot;,
+  &quot;reason&quot;: &quot;字段 [output_data] 校验成功 (尝试 1 次)：实际值 &#39;{\&quot;character\&quot;:\&quot;贷后管理部\&quot;,\&quot;target\&quot;:\&quot;本人\&quot;,\&quot;pressure_points\&quot;:[{\&quot;point\&quot;:\&quot;承认意愿，但否定其拖延的想法，告知逾期可能无法保留分期，告知未按照时间处理否则平台开展违约流程，但否定其拖延借口，告知其流程的紧迫感和压力\&quot;,\&quot;script\&quot;:[\&quot;锁定当前处境，要求立即行动：“你当前的欠款的金额还有xx元多，如若你今天处理，可以将你并非恶意的逾期的情况说明，如若继续拖延，将面临风险升级的情况”\&quot;,\&quot;同理认可+警示后果：“遇到突发情况可以理解，也相信你在想办法积极处理，但是合同具有法律效应，平台要求你xx点之前处理，未处理可能取消你的分期资格，要求全款结清，总欠款高达xx多，到时候也会给你造成更大还款压力。”\&quot;,\&quot;阐明规则，施加系统性压力：“因你这个贷款本来就是信用借贷，我们公司是不允许出现多次逾期的情况，合同上写的很清楚，需要你按时按点去处理欠款，你多次逾期的行为，已经危及到我们公司资金安全了，你当时签订的借款合同是有法律效益的，并且你自己本身借款当时承诺的是按时还款，而你现在出现多次逾期的情况，已经触达高风险劲爆，我们可能要按照合同相关规定来追究你的违约责任的”\&quot;]},{\&quot;point\&quot;:\&quot;让客户认识到频繁借款和逾期行为加剧了信用恶化，并通过警告后果（如法律风险）来促使还款，同时提供短期建议（如还清逾期后等待再申请）。\&quot;,\&quot;script\&quot;:[\&quot;督促维护信用：“如果你想要跟还呗平台继续合作下去，那您更不应该逾期，现阶段最重要的是要把你的还款记录给维护好”\&quot;,\&quot;警告后果：“目前不排除有这种以贷养贷的行为，后续我们可能会给你下发一个通知，既然无法处理，那你准备好你的身份证正反面、复印件户口本的本人页面复印件，最重要的是你本人放款银行卡从第一次放款后的流水记录以及个人征信给我们提供过来，进行二次风险核实，如果核实下来，你是存在骗贷行为，xx万块，不是小数目，那我们公司可能会追究你相关的法律责任。”\&quot;,\&quot;用征信施加压力，把征信影响的不可逆性告知客户，造成心里压力：“如果你不处理，征信可能受影响，不是说一时半刻的，可能会影响五年，所以影响的时间是比较长的，也有可能会影响到你以后买车买房呀，或者是生意周转之类的”\&quot;]},{\&quot;point\&quot;:\&quot;提醒逾期可能致电三方联系人对本人造成的影响，使用核对三方与本人的关系后进行施压\&quot;,\&quot;script\&quot;:[\&quot;询问社交支持：“你的爱人父母兄弟姊妹，家人们知不知道你在外面的负债情况，有没有去尝试周转”\&quot;,\&quot;施压联系人：“后续我们这个电话可能会外呼到你的预留紧急联系人，可能向他们来核实你本人的真实情况”\&quot;,\&quot;要求家庭支援/放大社会压力：“鉴于您多次逾期的情况，平台很可能会联系紧急联系人核实您的情况，咱们这个年纪，都不想让别人操心，对吧？”\&quot;]}],\&quot;resp_code\&quot;:\&quot;1\&quot;,\&quot;resp_msg\&quot;:\&quot;success\&quot;}&#39; 不为空 &#39;None&#39;&quot;,
+  &quot;details&quot;: {
+    &quot;actual&quot;: &quot;{\&quot;character\&quot;:\&quot;贷后管理部\&quot;,\&quot;target\&quot;:\&quot;本人\&quot;,\&quot;pressure_points\&quot;:[{\&quot;point\&quot;:\&quot;承认意愿，但否定其拖延的想法，告知逾期可能无法保留分期，告知未按照时间处理否则平台开展违约流程，但否定其拖延借口，告知其流程的紧迫感和压力\&quot;,\&quot;script\&quot;:[\&quot;锁定当前处境，要求立即行动：“你当前的欠款的金额还有xx元多，如若你今天处理，可以将你并非恶意的逾期的情况说明，如若继续拖延，将面临风险升级的情况”\&quot;,\&quot;同理认可+警示后果：“遇到突发情况可以理解，也相信你在想办法积极处理，但是合同具有法律效应，平台要求你xx点之前处理，未处理可能取消你的分期资格，要求全款结清，总欠款高达xx多，到时候也会给你造成更大还款压力。”\&quot;,\&quot;阐明规则，施加系统性压力：“因你这个贷款本来就是信用借贷，我们公司是不允许出现多次逾期的情况，合同上写的很清楚，需要你按时按点去处理欠款，你多次逾期的行为，已经危及到我们公司资金安全了，你当时签订的借款合同是有法律效益的，并且你自己本身借款当时承诺的是按时还款，而你现在出现多次逾期的情况，已经触达高风险劲爆，我们可能要按照合同相关规定来追究你的违约责任的”\&quot;]},{\&quot;point\&quot;:\&quot;让客户认识到频繁借款和逾期行为加剧了信用恶化，并通过警告后果（如法律风险）来促使还款，同时提供短期建议（如还清逾期后等待再申请）。\&quot;,\&quot;script\&quot;:[\&quot;督促维护信用：“如果你想要跟还呗平台继续合作下去，那您更不应该逾期，现阶段最重要的是要把你的还款记录给维护好”\&quot;,\&quot;警告后果：“目前不排除有这种以贷养贷的行为，后续我们可能会给你下发一个通知，既然无法处理，那你准备好你的身份证正反面、复印件户口本的本人页面复印件，最重要的是你本人放款银行卡从第一次放款后的流水记录以及个人征信给我们提供过来，进行二次风险核实，如果核实下来，你是存在骗贷行为，xx万块，不是小数目，那我们公司可能会追究你相关的法律责任。”\&quot;,\&quot;用征信施加压力，把征信影响的不可逆性告知客户，造成心里压力：“如果你不处理，征信可能受影响，不是说一时半刻的，可能会影响五年，所以影响的时间是比较长的，也有可能会影响到你以后买车买房呀，或者是生意周转之类的”\&quot;]},{\&quot;point\&quot;:\&quot;提醒逾期可能致电三方联系人对本人造成的影响，使用核对三方与本人的关系后进行施压\&quot;,\&quot;script\&quot;:[\&quot;询问社交支持：“你的爱人父母兄弟姊妹，家人们知不知道你在外面的负债情况，有没有去尝试周转”\&quot;,\&quot;施压联系人：“后续我们这个电话可能会外呼到你的预留紧急联系人，可能向他们来核实你本人的真实情况”\&quot;,\&quot;要求家庭支援/放大社会压力：“鉴于您多次逾期的情况，平台很可能会联系紧急联系人核实您的情况，咱们这个年纪，都不想让别人操心，对吧？”\&quot;]}],\&quot;resp_code\&quot;:\&quot;1\&quot;,\&quot;resp_msg\&quot;:\&quot;success\&quot;}&quot;,
+    &quot;expected&quot;: null,
+    &quot;sql&quot;: &quot;SELECT output_data FROM ai_script_recommendation_log WHERE serial_id=&#39;07eca1c8bde143b3b1110ef478d039bd&#39; AND uid=&#39;0c8ea980f76a4c9ebba33d976e0a3b8f&#39; LIMIT 1&quot;,
+    &quot;attempts&quot;: 1
+  }
+}</pre>
+                </div>
+            </details>
+        </div>
+        
+        
+            </div>
+        </div>
+        
+        <div class="execution-item item-success">
+            <div class="collapsible-header" onclick="toggleItem('step_0_assert_12_content')">
+                <div class="header-left">
+                    <span class="toggle-icon">▶</span>
+                    <span class="item-index">断言 #13</span>
+                    <span class="item-intent">验证AI平台业务状态码为1（成功）</span>
+                </div>
+                <div class="item-status">✅ 成功</div>
+            </div>
+            <div id="step_0_assert_12_content" class="collapsible-content">
+                
+        <div class="item-row">
+            <span class="item-label">使用动作:</span>
+            <span class="item-value"><code>assert_database_field</code></span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">开始时间:</span>
+            <span class="item-value">22:05:58.631</span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">结束时间:</span>
+            <span class="item-value">22:05:58.700</span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">执行耗时:</span>
+            <span class="item-value">0.068 秒</span>
+        </div>
+        <div class="item-details">
+            <details>
+                <summary>📋 输入参数</summary>
+                <div class="details-content">
+                    <pre>{
+  &quot;database&quot;: &quot;copilot&quot;,
+  &quot;table&quot;: &quot;ai_script_recommendation_log&quot;,
+  &quot;field&quot;: &quot;JSON_UNQUOTE(JSON_EXTRACT(output_data, &#39;$.resp_code&#39;))&quot;,
+  &quot;where&quot;: &quot;serial_id=&#39;${context.serialId}&#39; AND uid=&#39;${context.uid}&#39;&quot;,
+  &quot;expected&quot;: &quot;1&quot;
+}</pre>
+                </div>
+            </details>
+        </div>
+        <div class="item-details">
+            <details>
+                <summary>📤 执行结果</summary>
+                <div class="details-content">
+                    <pre>{
+  &quot;status&quot;: &quot;PASS&quot;,
+  &quot;reason&quot;: &quot;字段 [JSON_UNQUOTE(JSON_EXTRACT(output_data, &#39;$.resp_code&#39;))] 校验成功 (尝试 1 次)：实际值 &#39;1&#39; 等于 &#39;1&#39;&quot;,
+  &quot;details&quot;: {
+    &quot;actual&quot;: &quot;1&quot;,
+    &quot;expected&quot;: &quot;1&quot;,
+    &quot;sql&quot;: &quot;SELECT JSON_UNQUOTE(JSON_EXTRACT(output_data, &#39;$.resp_code&#39;)) FROM ai_script_recommendation_log WHERE serial_id=&#39;07eca1c8bde143b3b1110ef478d039bd&#39; AND uid=&#39;0c8ea980f76a4c9ebba33d976e0a3b8f&#39; LIMIT 1&quot;,
+    &quot;attempts&quot;: 1
+  }
+}</pre>
+                </div>
+            </details>
+        </div>
+        
+        
+            </div>
+        </div>
+        
+        <div class="execution-item item-success">
+            <div class="collapsible-header" onclick="toggleItem('step_0_assert_13_content')">
+                <div class="header-left">
+                    <span class="toggle-icon">▶</span>
+                    <span class="item-index">断言 #14</span>
+                    <span class="item-intent">验证TKD_002被同步更新（基于uid+source）</span>
+                </div>
+                <div class="item-status">✅ 成功</div>
+            </div>
+            <div id="step_0_assert_13_content" class="collapsible-content">
+                
+        <div class="item-row">
+            <span class="item-label">使用动作:</span>
+            <span class="item-value"><code>assert_database_field</code></span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">开始时间:</span>
+            <span class="item-value">22:05:58.700</span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">结束时间:</span>
+            <span class="item-value">22:05:58.768</span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">执行耗时:</span>
+            <span class="item-value">0.068 秒</span>
+        </div>
+        <div class="item-details">
+            <details>
+                <summary>📋 输入参数</summary>
+                <div class="details-content">
+                    <pre>{
+  &quot;database&quot;: &quot;copilot&quot;,
+  &quot;table&quot;: &quot;ai_script_recommendation&quot;,
+  &quot;field&quot;: &quot;serial_id&quot;,
+  &quot;where&quot;: &quot;uid=&#39;${context.uid}&#39; AND source=&#39;autotest2&#39;&quot;,
+  &quot;expected&quot;: &quot;${context.serialId}&quot;
+}</pre>
+                </div>
+            </details>
+        </div>
+        <div class="item-details">
+            <details>
+                <summary>📤 执行结果</summary>
+                <div class="details-content">
+                    <pre>{
+  &quot;status&quot;: &quot;PASS&quot;,
+  &quot;reason&quot;: &quot;字段 [serial_id] 校验成功 (尝试 1 次)：实际值 &#39;07eca1c8bde143b3b1110ef478d039bd&#39; 等于 &#39;07eca1c8bde143b3b1110ef478d039bd&#39;&quot;,
+  &quot;details&quot;: {
+    &quot;actual&quot;: &quot;07eca1c8bde143b3b1110ef478d039bd&quot;,
+    &quot;expected&quot;: &quot;07eca1c8bde143b3b1110ef478d039bd&quot;,
+    &quot;sql&quot;: &quot;SELECT serial_id FROM ai_script_recommendation WHERE uid=&#39;0c8ea980f76a4c9ebba33d976e0a3b8f&#39; AND source=&#39;autotest2&#39; LIMIT 1&quot;,
+    &quot;attempts&quot;: 1
+  }
+}</pre>
+                </div>
+            </details>
+        </div>
+        
+        
+            </div>
+        </div>
+        
+                </div>
+            </div>
+            
+            </div>
+        </div>
+        
+            </div>
+        </div>
+        
+
+        <!-- 报告尾部 -->
+        
+        <div class="footer">
+            <p>报告生成时间: 2026-03-06 22:05:58</p>
+            <p>AI测试框架 v1.0 | Powered by knowtest_ai</p>
+        </div>
+        
+    </div>
+</body>
+</html>

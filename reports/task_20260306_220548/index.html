@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试报告汇总 - task_20260306_220548</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+                         'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .header .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 30px 40px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .summary-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+
+        .summary-card .label {
+            font-size: 14px;
+            color: #6c757d;
+            margin-bottom: 8px;
+        }
+
+        .summary-card .value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #212529;
+        }
+
+        .summary-card.pass .value {
+            color: #28a745;
+        }
+
+        .summary-card.fail .value {
+            color: #dc3545;
+        }
+
+        .summary-card.rate .value {
+            color: #667eea;
+        }
+
+        .test-list {
+            padding: 40px;
+        }
+
+        .test-list h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #212529;
+        }
+
+        .test-item {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .test-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .test-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .test-item-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-badge.pass {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge.fail {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .test-id {
+            font-size: 18px;
+            font-weight: 600;
+            color: #212529;
+        }
+
+        .test-name {
+            font-size: 14px;
+            color: #6c757d;
+            margin-bottom: 10px;
+        }
+
+        .test-meta {
+            display: flex;
+            gap: 20px;
+            font-size: 13px;
+            color: #6c757d;
+        }
+
+        .test-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .test-actions {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            color: #6c757d;
+            font-size: 14px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 测试报告汇总</h1>
+            <div class="subtitle">任务: task_20260306_220548</div>
+        </div>
+
+        <div class="summary">
+            <div class="summary-card">
+                <div class="label">总用例数</div>
+                <div class="value">1</div>
+            </div>
+            <div class="summary-card pass">
+                <div class="label">通过</div>
+                <div class="value">1</div>
+            </div>
+            <div class="summary-card fail">
+                <div class="label">失败</div>
+                <div class="value">0</div>
+            </div>
+            <div class="summary-card rate">
+                <div class="label">通过率</div>
+                <div class="value">100.0%</div>
+            </div>
+            <div class="summary-card">
+                <div class="label">总耗时</div>
+                <div class="value">10.7s</div>
+            </div>
+        </div>
+
+        <div class="test-list">
+            <h2>📋 测试用例列表</h2>
+
+            <div class="test-item">
+                <div class="test-item-header">
+                    <div class="test-item-title">
+                        <span class="status-badge pass">✅ PASS</span>
+                        <span class="test-id">TC_TKI005_001</span>
+                    </div>
+                </div>
+                <div class="test-name">AI剧本信息实时生成_正常流程</div>
+                <div class="test-meta">
+                    <div class="test-meta-item">
+                        <span>⏱️</span>
+                        <span>10.66秒</span>
+                    </div>
+                    <div class="test-meta-item">
+                        <span>📝</span>
+                        <span>14 个断言</span>
+                    </div>
+                    <div class="test-meta-item">
+                        <span>✅</span>
+                        <span>14 通过</span>
+                    </div>
+                    <div class="test-meta-item">
+                        <span>📄</span>
+                        <span>TC_TKI005_001_AI剧本信息实时生成_正常流程.yaml</span>
+                    </div>
+                </div>
+                <div class="test-actions">
+                    <a href="TC_TKI005_001_20260306_220558.html" class="btn" target="_blank">查看详细报告</a>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="footer">
+            <p>生成时间: 2026-03-06 22:05:58</p>
+            <p>AI测试框架 v1.0</p>
+        </div>
+    </div>
+</body>
+</html>
