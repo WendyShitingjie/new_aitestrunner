@@ -158,6 +158,7 @@ test_intent:
 - `database_insert`: 插入数据
 - `database_delete`: 删除数据
 - `database_update`: 更新数据
+- `database_select`: 查询数据
 
 ### API操作类
 
@@ -165,10 +166,12 @@ test_intent:
 
 ### 断言类
 
-- `assert_api_response`: 验证API响应
-- `assert_database_field`: 验证数据库字段值
-- `assert_database_json_field`: 验证数据库JSON字段内部值
-- `assert_value`: 通用值比较
+- `assert_api_response`: 断言 API 响应结果
+- `assert_database_field`: 断言数据库指定记录的字段满足特定条件
+- `assert_database_json_field`: 断言数据库中JSON列内的指定路径值是否满足条件
+- `assert_database_record_count`: 断言符合条件的数据库记录行数是否达标
+- `assert_database_all_match`: 断言查询出的所有记录的指定字段是否全部满足条件
+- `assert_value`: 断言任意给定的两个值是否满足条件
 
 ## 高级特性
 
