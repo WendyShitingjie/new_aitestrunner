@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "WebFetch(domain:help.aliyun.com)",
+      "WebFetch(domain:www.volcengine.com)",
+      "WebSearch"
     ]
   }
 }

@@ -1,9 +1,17 @@
 # AI测试框架配置文件
 
 # 知识库配置
-knowledge_base:
-  b_tree_path: "aiqc/knowledge/business-tree"
-  a_tree_path: "aiqc/knowledge/application-trees"
+llm:
+#  api_key: "sk-vGBzcTQlEGj_CMMS_aEVUA"
+#  base_url: "http://ai.caijj.net"
+#  model: "pub_claude-sonnet_anthropic"  # pub_claude-sonnet_anthropic, pub_doubao-seed-1.6_volcengine
+  api_key: "sk-sp-7a3c5281889d4b76b67e8719bc56dbee"
+  base_url: "https://coding.dashscope.aliyuncs.com/v1"
+  model: "qwen3-coder-plus"   # qwen3.5-plus, qwen3-max-2026-01-23, qwen3-coder-next, qwen3-coder-plus, glm-5, glm-4.7, kimi-k2.5, MiniMax-M2.5
+#  api_key: "9df05f8c-b217-4563-bb15-f889dd8da059"
+#  base_url: "https://ark.cn-beijing.volces.com/api/v3"
+#  model: "doubao-seed-2-0-code-preview-260215"
+
 
 # 数据库配置
 database:

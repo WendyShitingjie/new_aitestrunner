@@ -5,7 +5,7 @@ from typing import Any
 class AssertionEngine:
     """增强型比较引擎：支持中英文及符号映射"""
 
-    # 操作符映射表（中文、英文、符号）
+    # 运算符映射表（中文、英文、符号）
     OP_MAP = {
         'eq': 'eq', '==': 'eq', '=': 'eq', '等于': 'eq',
         'ne': 'ne', '!=': 'ne', '<>': 'ne', '不等于': 'ne',
@@ -18,7 +18,7 @@ class AssertionEngine:
         'startswith': 'startswith', '开头是': 'startswith',
         'endswith': 'endswith', '结尾是': 'endswith',
         'regex': 'regex', '正则': 'regex',
-        'null': 'null', 'is_null': 'null', '为空': 'null',
+        'null': 'null', 'is_null': 'null', '空': 'null', '为空': 'null',
         'not_null': 'not_null', 'is_not_null': 'not_null', '不为空': 'not_null',
         # 新增：数值类型校验
         'is_numeric': 'is_numeric', 'numeric': 'is_numeric', 'number': 'is_numeric',
@@ -31,8 +31,10 @@ class AssertionEngine:
         op = cls.OP_MAP.get(str(operator).lower(), 'eq')
 
         # 1. 空值断言 (忽略 expected)
-        if op == 'null': return actual is None or str(actual).lower() == 'null'
-        if op == 'not_null': return actual is not None and str(actual).lower() != 'null'
+        # if op == 'null': return actual is None or str(actual).lower() == 'null'
+        if op == 'null': return actual is None or str(actual).strip().lower() in ('null', '')
+        # if op == 'not_null': return actual is not None and str(actual).lower() != 'null'
+        if op == 'not_null': return actual is not None and str(actual).strip().lower() not in ('null', '')
 
         # 2. 类型/格式校验 (忽略 expected)
         if op == 'is_numeric':

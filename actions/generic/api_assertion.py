@@ -18,7 +18,7 @@ class AssertApiResponseAction(ExecutionAction):
                 'name': 'path',
                 'type': 'str',
                 'required': True,
-                'description': '实际值提取路径。示例：status_code(状态码), body.data.id(响应体字段), headers.Content-Type'
+                'description': '实际值提取路径。示例：status_code(状态码), body.data.code(响应体字段), headers.Content-Type'
             },
             {
                 'name': 'expected',
@@ -56,6 +56,9 @@ class AssertApiResponseAction(ExecutionAction):
 
     def execute(self, context, **params) -> Dict[str, Any]:
         self.validate_parameters(params)
+
+
+        print(f'-----------------{path}')
 
         path = params['path']
         expected = params.get('expected')

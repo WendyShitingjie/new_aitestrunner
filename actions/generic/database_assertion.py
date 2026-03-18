@@ -29,7 +29,7 @@ class AssertDatabaseFieldAction(ExecutionAction):
             {'name': 'where', 'type': 'str', 'required': True, 'description': 'WHERE子句'},
             {'name': 'expected', 'type': 'any', 'required': False, 'description': '期望值'},
             {'name': 'operator', 'type': 'str', 'required': False, 'default': '等于', 'description': '比较符'},
-            {'name': 'timeout', 'type': 'int', 'required': False, 'default': 0, 'description': '最大超时时间(秒)，0表示不轮询'},
+            {'name': 'timeout', 'type': 'int', 'required': False, 'default': 10, 'description': '最大超时时间(秒)，0表示不轮询'},
             {'name': 'interval', 'type': 'int', 'required': False, 'default': 2, 'description': '轮询间隔(秒)'}
         ],
         returns={
@@ -98,7 +98,7 @@ class AssertDatabaseRecordCountAction(ExecutionAction):
             {'name': 'where', 'type': 'str', 'required': True, 'description': 'WHERE条件'},
             {'name': 'expected', 'type': 'int', 'required': True, 'description': '期望行数'},
             {'name': 'operator', 'type': 'str', 'required': False, 'default': '>=', 'description': '比较符'},
-            {'name': 'timeout', 'type': 'int', 'required': False, 'default': 0, 'description': '最大超时时间(秒)'},
+            {'name': 'timeout', 'type': 'int', 'required': False, 'default': 10, 'description': '最大超时时间(秒)'},
             {'name': 'interval', 'type': 'int', 'required': False, 'default': 2, 'description': '轮询间隔(秒)'}
         ],
         returns={

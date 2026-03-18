@@ -1,0 +1,31 @@
+type: AD-系统数据类
+code: AD_copilot_ai_execute_config
+name: AI执行配置表
+version: v2.0
+description: 存储AI工作流/模型的配置信息，用于校验请求中的aiExecuteCode合法性
+
+keys:
+  type: MySQL
+  database: copilot
+  table: ai_execute_config
+ddl: |
+    CREATE TABLE `ai_execute_config` (
+      `id` bigint(32) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+      `name` varchar(64) DEFAULT NULL COMMENT '业务名字',
+      `code` varchar(32) DEFAULT NULL COMMENT '业务编号',
+      `type` varchar(32) DEFAULT NULL COMMENT '工作流：flow，模型：model',
+      `agent_workflow_code` varchar(100) DEFAULT NULL COMMENT '智能体/工作流的code',
+      `source` varchar(20) DEFAULT NULL COMMENT '业务线:postLoan,electricPin,telmarket',
+      `model_info` varchar(64) DEFAULT NULL COMMENT '模型信息',
+      `created_at` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+      `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+      PRIMARY KEY (`id`),
+      KEY `idx_code` (`code`) USING BTREE,
+      KEY `idx_updated_at` (`updated_at`) USING BTREE
+    ) ENGINE=InnoDB COMMENT='AI执行配置表';
+logic_rules: []
+test_data: []
+notes:
+  - 新增业务线或工作流时，必须先在此表添加配置记录。
+  - 可通过配置无效的agent_workflow_code，来测试AI执行接口的校验逻辑。
+  - code 字段与AD_copilot_ai_script_recommendation_log表、AD_copilot_ai_script_recommendation表、AI_copilot_ai_script_generate请求体中的ai_execute_code字段对应。

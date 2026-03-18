@@ -14,3 +14,9 @@ def get_timestamp():
 def timestamp_minus_minutes(minutes: int):
     return (datetime.now() - timedelta(minutes=int(minutes))).strftime('%Y-%m-%d %H:%M:%S')
 
+def timestamp_plus_hours(hours: int):
+    return (datetime.now() + timedelta(hours=int(hours))).strftime('%Y-%m-%d %H:%M:%S')
+
+@function_registry.register("batch_no")
+def generate_batch_no():
+    return datetime.now().strftime('%Y%m%d') + '001'

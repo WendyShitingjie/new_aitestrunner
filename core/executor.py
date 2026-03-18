@@ -14,11 +14,11 @@ from .param_resolver import ParamResolver
 class TestResult:
     """测试结果"""
     
-    def __init__(self, test_case_id: str, test_name: str, status: str,
+    def __init__(self, case_code: str, case_name: str, status: str,
                  execution_time: float, assertions: List[Dict],
                  context_snapshot: Dict, business_analysis: Dict):
-        self.test_case_id = test_case_id
-        self.test_name = test_name
+        self.case_code = case_code
+        self.case_name = case_name
         self.status = status
         self.execution_time = execution_time
         self.assertions = assertions
@@ -40,6 +40,7 @@ class AITestExecutor:
         """
         self.intent_parser = IntentParser(llm_client, knowledge_base) if llm_client else None
         self.action_registry = ActionRegistry()
+        self.action_registry.discover()  # 自动发现并注册所有actions
         self.context = ExecutionContext()
         self.enable_html_report = enable_html_report
         self.html_reporter = HTMLReporter() if enable_html_report else None
@@ -74,19 +75,17 @@ class AITestExecutor:
 
         # 1. 解析YAML
         test_case = yaml.safe_load(test_case_yaml)
+        case_name = test_case.get('case_name')
+        if not case_name:
+            raise ValueError("测试用例缺少 'case_name' 字段")
 
-        print(f"📋 开始执行测试用例: {test_case['test_name']}")
-        print(f"🎯 业务流程: {test_case.get('business_flow', 'N/A')}")
-        print(f"📜 业务规则: {test_case.get('business_rules', [])}")
+        print(f"📋 开始执行测试用例: {case_name}")
 
         start_time = datetime.now()
         self.execution_details['start_time'] = start_time
 
         # 2. 初始化上下文
         context = ExecutionContext()
-        if 'business_flow' in test_case:
-            context.load_b_tree(test_case['business_flow'])
-            context.load_a_tree(f"IMPL_{test_case['business_flow']}")
 
         # 3. 执行前置条件
         print("\n🔧 执行前置条件...")
@@ -192,7 +191,7 @@ class AITestExecutor:
 
                 # 将前置参数及参数值写入上下文
                 self._inject_context_recursively(context, resolved_params)
-                # print(f"      → 上下文: {context.get('serial_id')}")
+                # print(f"      → 参数: {resolved_params}")
 
                 # 执行动作
                 action = self.action_registry.get(parsed.action)
@@ -286,6 +285,7 @@ class AITestExecutor:
                 item_detail['params'] = parsed.parameters
 
                 print(f"      → 使用动作2: {parsed.action}")
+                # print(f"      → 参数: {resolved_params}")
 
                 # 解析参数（支持变量引用和函数调用）
                 resolver = ParamResolver(context)
@@ -293,7 +293,7 @@ class AITestExecutor:
 
                 # 将步骤参数及参数值写入上下文
                 self._inject_context_recursively(context, resolved_params)
-                # print(f"      → 上下文: {context.get('serial_id')}")
+
 
                 # 执行动作
                 action = self.action_registry.get(parsed.action)
@@ -309,7 +309,7 @@ class AITestExecutor:
                     # 执行步骤级别的断言
                     step_assertions = step.get('assertions', [])
                     if step_assertions:
-                        print(f"\n      🔍 执行步骤断言 ({len(step_assertions)}个)...")
+                        print(f"\n      [ASSERT] 执行步骤断言 ({len(step_assertions)}个)...")
                         for j, assertion in enumerate(step_assertions):
                             assertion_result = self._execute_single_assertion(
                                 assertion, context, j+1
@@ -394,7 +394,7 @@ class AITestExecutor:
 
             # 将断言参数及参数值写入上下文
             self._inject_context_recursively(context, resolved_params)
-            # print(f"      → 上下文: {context.get('serial_id')}")
+            # print(f"      → 参数: {resolved_params}")
 
             # 执行动作
             action = self.action_registry.get(parsed.action)
@@ -461,8 +461,8 @@ class AITestExecutor:
         all_passed = all(a.get('status') == 'PASS' for a in all_assertions) if all_assertions else True
 
         return TestResult(
-            test_case_id=test_case.get('test_case_id', 'N/A'),
-            test_name=test_case['test_name'],
+            case_code=test_case.get('case_code', 'N/A'),
+            case_name=test_case.get('case_name', 'N/A'),
             status='PASS' if all_passed else 'FAIL',
             execution_time=execution_time,
             assertions=[a.get('result', {}) for a in all_assertions],

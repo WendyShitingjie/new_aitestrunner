@@ -117,6 +117,16 @@ class ActionRegistry:
         except ImportError as e:
             print(f"Warning: 无法导入动作模块 actions.generic.job_operation: {e}")
 
+        try:
+            import actions.generic.noop
+        except ImportError as e:
+            print(f"Warning: 无法导入动作模块 actions.generic.noop: {e}")
+
+        try:
+            import actions.generic.print
+        except ImportError as e:
+            print(f"Warning: 无法导入���作模块 actions.generic.print: {e}")
+
         # Import all business action modules
         try:
             import actions.business.datahub.data_preparation

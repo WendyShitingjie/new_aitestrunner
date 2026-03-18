@@ -1,0 +1,55 @@
+type: AD-系统数据类
+code: AD_copilot_ai_script_recommendation_log
+name: 剧本推荐日志表
+version: v2.0
+description: 记录每次剧本生成请求的详细日志，包含输入输出、状态和失败原因
+keys:
+  type: MySQL
+  database: copilot
+  table: ai_script_recommendation_log
+ddl: |
+    CREATE TABLE `ai_script_recommendation_log` (
+      `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+      `serial_id` varchar(64) NOT NULL COMMENT '流水号',
+      `uid` varchar(64) NOT NULL COMMENT '客户uid',
+      `queue` varchar(100) DEFAULT NULL COMMENT '案件当前所属的队列',
+      `ai_execute_code` varchar(100) DEFAULT NULL COMMENT 'ai执行编号',
+      `triger_scene` varchar(50) NOT NULL COMMENT '触发剧本更新的场景：JOB，REPAY_SUCCESS，AI_SUMMARY_SUCCESS',
+      `input_data` text COMMENT 'JSON字符串，调用智能平台传入的加工好的业务数据，必须包含主键 uid',
+      `output_data` text COMMENT 'JSON字符串，智能平台返回的结果内容',
+      `execute_status` varchar(20) NOT NULL COMMENT '执行状态：INIT，SUCCESS，FAILURE，PROCESSING',
+      `failure_reason` varchar(500) DEFAULT NULL COMMENT '失败原因：执行异常、匹配剧本失败 等失败原因',
+      `created_at` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+      `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+      `source` varchar(50) NOT NULL COMMENT '业务来源 postLoan:贷后，electricPin:电销，service:客服',
+      PRIMARY KEY (`id`),
+      UNIQUE KEY `uk_serial_id` (`serial_id`) USING BTREE,
+      KEY `idx_uid` (`uid`) USING BTREE,
+      KEY `idx_updated_at` (`updated_at`) USING BTREE,
+      KEY `idx_created_at` (`created_at`) USING BTREE
+    ) ENGINE=InnoDB COMMENT='智能剧本推荐记录日志表';
+test_data:
+  complete:
+    serial_id: "uuid-complete-001"
+    uid: "100002"
+    queue: "S1"
+    ai_execute_code: "SCRIPT_GEN_001"
+    triger_scene: "JOB"
+    input_data: '{"income":"5千-1万","isFirstOverdue":"0","contactNameFst":"王五","companyName":"XX科技公司","identAddress":"北京市朝阳区","loanCnt":"3","uid":"0e5d1ede6d484c328dc9074746975d81","complainCnt":"0","latestOutcallStatus":"1","laterstAiCallSummary":"客户质疑平台政策，要求减免费用，情绪激动","overdueDays":"15","callCnt":"20","totalOverdueAmount":"5000.00","latestRepayTime":"2026-01-15 10:30:00","callAnswerRate":"0.8500","totalOverduePrincipal":"4000.00","sex":"男","degree":"本科","laterstManualCallSummary":"沟通中无故挂断，告知没有政策帮助","overdueCnt":"1","customerName":"张三","monthRepayAmount":"1500.00","contactRelationFst":"USER_RELATION_PARENT","queueName":"ai_play_queue_1","contents":"用户进线，咨询逾期账单费用减免，辛苦处理","concatCnt":"10","latestSixMonthOverdueCnt":"2","deviceModel":"iPhone12,1","age":"30","maritalStatus":"已婚"}'
+    execute_status: "SUCCESS"
+    output_data: '{"character":"还呗财务部","target":"本人","pressure_points":[{"point":"施压点1","script":["话术11","话术12"]},{"point":"施压点2","script":["话术21","话术22"]}],"resp_code":"1","resp_msg":"success"}'
+    source: "postLoan"
+
+queries:
+  - purpose: 验证JSON字段值（必须使用JSON_UNQUOTE）
+    sql: "SELECT JSON_UNQUOTE(JSON_EXTRACT(output_data, '$.resp_code')) as resp_code, JSON_UNQUOTE(JSON_EXTRACT(output_data, '$.character')) as character FROM ai_script_recommendation_log WHERE source = ? ORDER BY id DESC LIMIT 1"
+  - purpose: 查询待处理记录（INIT/FAILURE/PROCESSING，且超过一定时间）
+    sql: "SELECT id, serial_id, uid, queue, ai_execute_code, input_data, source FROM ai_script_recommendation_log WHERE execute_status = ? AND updated_at < DATE_SUB(NOW(), INTERVAL ? MINUTE) ORDER BY updated_at ASC LIMIT ?"
+  - purpose: 验证所有记录的状态一致
+    sql: "SELECT COUNT(*) as total_count, SUM(CASE WHEN execute_status = 'SUCCESS' THEN 1 ELSE 0 END) as success_count FROM ai_script_recommendation_log WHERE source = ?"
+notes:
+  - 数据准备顺序：建议先清理历史数据（如根据source和日期），再插入新数据，避免冲突。
+  - input_data 模型输入数据，必须包含主键 uid。
+  - JSON字段提取必须使用JSON_UNQUOTE(JSON_EXTRACT(...))，否则返回带引号的字符串。
+  - 异步执行有60-120秒延迟，断言时需设置timeout（如60秒）和poll_interval（如3秒）。
+  - 关联知识要素：AD_common_job_status（Job状态表）通过source字段关联。

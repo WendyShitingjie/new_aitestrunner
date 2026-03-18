@@ -1,0 +1,116 @@
+case_code: TC_AI_copilot_ai_script_generate_001
+case_name: AI剧本信息实时生成_合法参数提交_返回PROCESSING并异步成功
+element_code: AI_copilot_ai_script_generate
+element_name: AI剧本信息实时生成
+priority: P0
+auto_level: L3
+dependent_elements:
+- element_code: AD_copilot_ai_execute_config
+  element_name: AI执行配置表
+- element_code: AD_copilot_ai_script_recommendation_log
+  element_name: 剧本推荐日志表
+- element_code: AD_copilot_ai_script_recommendation
+  element_name: 剧本推荐表
+test_intent:
+  preconditions:
+  - intent: 前置1：清理历史数据
+    action: database_delete
+    params:
+      database: copilot
+      table: ai_script_recommendation_log
+      where: uid='test_user_001' AND source='postLoan'
+  - intent: 前置2：清理配置表数据
+    action: database_delete
+    params:
+      database: copilot
+      table: ai_execute_config
+      where: code='AI_SCRIPT_TEST_001'
+  - intent: 前置3：清理剧本推荐表数据
+    action: database_delete
+    params:
+      database: copilot
+      table: ai_script_recommendation
+      where: uid='test_user_001' AND source='postLoan'
+  - intent: 前置4：插入AI执行配置
+    action: database_insert
+    params:
+      database: copilot
+      table: ai_execute_config
+      data:
+        name: 测试AI剧本生成配置
+        code: AI_SCRIPT_TEST_001
+        type: flow
+        agent_workflow_code: 25b65c76c7054f9785f303bc92d0c0b6
+        source: postLoan
+  - intent: 前置5：插入基准数据（模拟已有记录）
+    action: database_insert
+    params:
+      database: copilot
+      table: ai_script_recommendation_log
+      data:
+        serial_id: ${uuid()}
+        uid: test_user_001
+        queue: ai_play_queue_test
+        ai_execute_code: AI_SCRIPT_TEST_001
+        triger_scene: REPAY_SUCCESS
+        input_data: '{"uid":"test_user_001","overdueCnt":2,"contents":"基准内容"}'
+        execute_status: SUCCESS
+        output_data: '{"character":"基准角色","target":"本人"}'
+        source: postLoan
+  test_steps:
+  - intent: 步骤1：调用AI剧本生成接口
+    action: call_http_api
+    params:
+      application: copilot
+      endpoint: /copilot/ai/script/generate
+      method: POST
+      headers:
+        Content-Type: application/json
+      body:
+        serial_id: ${uuid()}
+        uid: test_user_001
+        source: postLoan
+        triger_scene: REPAY_SUCCESS
+        aiExecuteCode: AI_SCRIPT_TEST_001
+        queue: ai_play_queue_test
+        inputData:
+          contents: 新的工单内容
+        featureComputeRequest:
+          bizSerial: ${uuid()}
+          uid: test_user_001
+          commonParams:
+            uid: test_user_001
+          featureConfigs:
+          - featureKey: rt_usr_adt_rat_csh
+            alias: overdueCnt
+    assertions:
+    - intent: 断言1：校验API响应状态码
+      action: assert_value
+      params:
+        actual: ${context.http_response.status_code}
+        expected: 200
+    - intent: 断言2：校验API响应中generateStatus为PROCESSING
+      action: assert_value
+      params:
+        actual: ${context.http_response.body.generateStatus}
+        expected: PROCESSING
+    - intent: 断言3：校验数据库中记录状态变为PROCESSING
+      action: assert_database_field
+      params:
+        database: copilot
+        table: ai_script_recommendation_log
+        field: execute_status
+        where: uid='test_user_001' AND source='postLoan' AND execute_status='PROCESSING'
+        expected: PROCESSING
+        timeout: 30
+        interval: 2
+  - intent: 步骤2：等待异步处理完成，校验最终状态为SUCCESS
+    action: assert_database_field
+    params:
+      database: copilot
+      table: ai_script_recommendation_log
+      field: execute_status
+      where: uid='test_user_001' AND source='postLoan' AND execute_status='SUCCESS'
+      expected: SUCCESS
+      timeout: 60
+      interval: 3

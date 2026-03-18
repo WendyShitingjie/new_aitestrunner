@@ -2,7 +2,6 @@
 from typing import Dict, List, Any
 from datetime import datetime
 import os
-import yaml
 
 
 class HTMLReporter:
@@ -18,23 +17,6 @@ class HTMLReporter:
         self.output_dir = output_dir
         os.makedirs(output_dir, exist_ok=True)
 
-        # 加载业务知识映射
-        self.knowledge_mapping = self._load_knowledge_mapping()
-
-    def _load_knowledge_mapping(self) -> Dict:
-        """加载业务知识映射配置"""
-        try:
-            mapping_file = os.path.join(
-                os.path.dirname(os.path.dirname(__file__)),
-                'config',
-                'knowledge_mapping.yaml'
-            )
-            with open(mapping_file, 'r', encoding='utf-8') as f:
-                return yaml.safe_load(f)
-        except Exception as e:
-            print(f"⚠️  加载知识映射配置失败: {e}")
-            return {'business_flows': {}, 'business_rules': {}}
-    
     def generate_report(self, test_case: Dict, execution_details: Dict, 
                        test_result: Any) -> str:
         """
@@ -48,10 +30,9 @@ class HTMLReporter:
         Returns:
             str: 报告文件路径
         """
-        # 生成报告文件名
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        test_case_id = test_case.get('test_case_id', 'UNKNOWN')
-        filename = f"{test_case_id}_{timestamp}.html"
+        # 生成报告文件名（不带时间戳，同批次同用例会覆盖）
+        case_code = test_case.get('case_code', 'UNKNOWN')
+        filename = f"{case_code}.html"
         filepath = os.path.join(self.output_dir, filename)
         
         # 生成HTML内容
@@ -96,7 +77,7 @@ class HTMLReporter:
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>测试报告 - {test_case.get('test_case_id', 'N/A')}</title>
+    <title>测试报告 - {test_case.get('case_code', 'N/A')}</title>
     <style>
         {self._get_css_styles()}
     </style>
@@ -217,6 +198,35 @@ class HTMLReporter:
             font-size: 32px;
             margin-bottom: 30px;
             text-align: center;
+        }
+
+        .case-title-section {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        .case-code-badge {
+            display: inline-block;
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            font-size: 16px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.95);
+            color: #667eea;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .case-name-text {
+            font-size: 18px;
+            line-height: 1.6;
+            color: white;
+            font-weight: 500;
+            word-break: break-word;
         }
 
         .info-cards {
@@ -733,17 +743,14 @@ class HTMLReporter:
         <div class="header">
             <h1>🧪 AI测试框架 - 测试报告</h1>
 
-            <!-- 基本信息卡片 -->
-            <div class="info-cards">
-                <div class="info-card">
-                    <div class="card-icon">📋</div>
-                    <div class="card-content">
-                        <div class="card-label">测试用例</div>
-                        <div class="card-value">{test_case.get('test_case_id', 'N/A')}</div>
-                        <div class="card-subtitle">{test_case.get('test_name', 'N/A')}</div>
-                    </div>
-                </div>
+            <!-- 测试用例信息（独立标题区域） -->
+            <div class="case-title-section">
+                <div class="case-code-badge">{test_case.get('case_code', 'N/A')}</div>
+                <div class="case-name-text">{test_case.get('case_name', 'N/A')}</div>
+            </div>
 
+            <!-- 基本信息卡片（只保留执行状态和时间） -->
+            <div class="info-cards">
                 <div class="info-card">
                     <div class="card-icon">{status_icon}</div>
                     <div class="card-content">
@@ -763,56 +770,57 @@ class HTMLReporter:
                 </div>
             </div>
 
-            <!-- 业务覆盖信息 -->
+            <!-- 知识要素覆盖信息 -->
             {coverage_table}
         </div>
         """
 
     def _generate_coverage_table(self, test_case: Dict) -> str:
-        """生成业务覆盖信息（简洁嵌套布局）"""
-        # 获取业务流程
-        flow_id = test_case.get('business_flow', '')
-        flow_name = self.knowledge_mapping.get('business_flows', {}).get(flow_id, '未知流程')
+        """生成知识要素覆盖信息"""
+        # 获取目标知识要素
+        element_code = test_case.get('element_code', 'N/A')
+        element_name = test_case.get('element_name', '未知要素')
 
-        # 获取业务规则
-        rule_ids = test_case.get('business_rules', [])
-        rules_html = ""
-        for rule_id in rule_ids:
-            rule_name = self.knowledge_mapping.get('business_rules', {}).get(rule_id, '未知规则')
-            rules_html += f"""
+        # 获取依赖知识要素
+        dependent_elements = test_case.get('dependent_elements', [])
+        dependent_html = ""
+        for dep in dependent_elements:
+            dep_code = dep.get('element_code', 'N/A')
+            dep_name = dep.get('element_name', '未知要素')
+            dependent_html += f"""
             <div class="rule-item">
-                <span class="rule-badge">{rule_id}</span>
-                <span class="rule-text">{rule_name}</span>
+                <span class="rule-badge">{dep_code}</span>
+                <span class="rule-text">{dep_name}</span>
             </div>
             """
 
-        if not rules_html:
-            rules_html = '<div class="no-rules">暂无业务规则</div>'
+        if not dependent_html:
+            dependent_html = '<div class="no-rules">暂无依赖知识要素</div>'
 
         return f"""
         <div class="coverage-section">
-            <h3>📊 业务覆盖范围</h3>
+            <h3>📊 知识要素覆盖</h3>
             <div class="flow-container">
                 <div class="flow-card">
-                    <!-- 业务流程头部 -->
+                    <!-- 目标知识要素 -->
                     <div class="flow-main">
-                        <div class="flow-icon">🔄</div>
+                        <div class="flow-icon">🎯</div>
                         <div class="flow-info">
-                            <div class="flow-label">业务流程</div>
+                            <div class="flow-label">目标知识要素</div>
                             <div class="flow-id-name">
-                                <span class="flow-badge">{flow_id}</span>
-                                <span class="flow-name">{flow_name}</span>
+                                <span class="flow-badge">{element_code}</span>
+                                <span class="flow-name">{element_name}</span>
                             </div>
                         </div>
                         <button class="toggle-rules-btn" onclick="toggleRules()" id="toggleRulesBtn">
                             <span class="toggle-icon" id="toggleIcon">▼</span>
-                            <span class="toggle-text">业务规则 ({len(rule_ids)})</span>
+                            <span class="toggle-text">依赖知识要素 ({len(dependent_elements)})</span>
                         </button>
                     </div>
 
-                    <!-- 业务规则列表（可折叠） -->
+                    <!-- 依赖知识要素列表（可折叠） -->
                     <div class="rules-list" id="rulesContainer">
-                        {rules_html}
+                        {dependent_html}
                     </div>
                 </div>
             </div>

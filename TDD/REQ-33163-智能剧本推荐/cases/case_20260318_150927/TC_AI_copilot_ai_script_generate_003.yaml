@@ -1,0 +1,90 @@
+case_code: TC_AI_copilot_ai_script_generate_003
+case_name: AI剧本信息实时生成_相同流水号失败后重试_返回PROCESSING重新处理
+element_code: AI_copilot_ai_script_generate
+element_name: AI剧本信息实时生成
+priority: P1
+auto_level: L3
+dependent_elements:
+- element_code: AD_copilot_ai_execute_config
+  element_name: AI执行配置表
+- element_code: AD_copilot_ai_script_recommendation_log
+  element_name: 剧本推荐日志表
+- element_code: AD_copilot_ai_script_recommendation
+  element_name: 剧本推荐表
+test_intent:
+  preconditions:
+  - intent: 前置1：清理历史数据
+    action: database_delete
+    params:
+      database: copilot
+      table: ai_script_recommendation_log
+      where: serial_id='test_serial_003'
+  - intent: 前置2：清理配置表数据
+    action: database_delete
+    params:
+      database: copilot
+      table: ai_execute_config
+      where: code='AI_SCRIPT_TEST_003'
+  - intent: 前置3：插入AI执行配置
+    action: database_insert
+    params:
+      database: copilot
+      table: ai_execute_config
+      data:
+        name: 测试AI剧本生成配置3
+        code: AI_SCRIPT_TEST_003
+        type: flow
+        agent_workflow_code: 25b65c76c7054f9785f303bc92d0c0b6
+        source: postLoan
+  - intent: 前置4：插入失败状态的记录
+    action: database_insert
+    params:
+      database: copilot
+      table: ai_script_recommendation_log
+      data:
+        serial_id: test_serial_003
+        uid: test_user_003
+        queue: ai_play_queue_test
+        ai_execute_code: AI_SCRIPT_TEST_003
+        triger_scene: REPAY_SUCCESS
+        input_data: '{"uid":"test_user_003","overdueCnt":1,"contents":"测试内容"}'
+        execute_status: FAILURE
+        failure_reason: AI调用超时
+        source: postLoan
+  test_steps:
+  - intent: 步骤1：使用相同serial_id再次调用接口
+    action: call_http_api
+    params:
+      application: copilot
+      endpoint: /copilot/ai/script/generate
+      method: POST
+      headers:
+        Content-Type: application/json
+      body:
+        serial_id: test_serial_003
+        uid: test_user_003
+        source: postLoan
+        triger_scene: REPAY_SUCCESS
+        aiExecuteCode: AI_SCRIPT_TEST_003
+        queue: ai_play_queue_test
+        inputData:
+          contents: 重试内容
+    assertions:
+    - intent: 断言1：校验API响应状态码
+      action: assert_value
+      params:
+        actual: ${context.http_response.status_code}
+        expected: 200
+    - intent: 断言2：校验API响应中generateStatus为PROCESSING
+      action: assert_value
+      params:
+        actual: ${context.http_response.body.generateStatus}
+        expected: PROCESSING
+    - intent: 断言3：校验数据库中记录状态已更新为PROCESSING
+      action: assert_database_field
+      params:
+        database: copilot
+        table: ai_script_recommendation_log
+        field: execute_status
+        where: serial_id='test_serial_003' AND execute_status='PROCESSING'
+        expected: PROCESSING

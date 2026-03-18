@@ -48,7 +48,7 @@ class CreateOverdueUserAction(ExecutionAction):
         ],
         returns={
             'user': '用户对象',
-            'case': '案件对象'
+            'cases': '案件对象'
         },
         examples=[
             {
@@ -108,7 +108,7 @@ class CreateOverdueUserAction(ExecutionAction):
         # 5. 返回结果
         return {
             'user': user_data,
-            'case': case_data
+            'cases': case_data
         }
 
     def _generate_user_id(self) -> str:

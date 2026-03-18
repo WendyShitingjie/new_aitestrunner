@@ -1,35 +1,33 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-运行测试用例（支持单个或批量执行）
+测试用例执行器 V2（支持单个或批量执行）
 
 用法:
     # 单个测试用例
-    python run_test.py <测试用例路径>
+    python case_run_v2.py <测试用例文件路径>
 
     # 批量执行（目录下所有.yaml文件）
-    python run_test.py <测试用例目录>
+    python case_run_v2.py <测试用例目录>
 
 示例:
     # 单个用例
-    python run_test.py cases/TC_TKF001_001_离线剧本批量生成_正常流程.yaml
+    python case_run_v2.py TDD/REQ-33163-智能剧本推荐/cases/case_20260318_143025/TC_AI_001.yaml
 
     # 批量执行
-    python run_test.py cases
+    python case_run_v2.py TDD/REQ-33163-智能剧本推荐/cases/case_20260318_143025
 """
 
 import sys
 import argparse
 from pathlib import Path
 from datetime import datetime
-import os
 
-# --- 修改这部分 ---
-# 现在 run_test.py 在项目根目录下
+# 项目根目录设置
 current_dir = Path(__file__).parent
-project_root = current_dir  # 当前目录就是项目根目录
+project_root = current_dir
 
-# 将真正的项目根目录加入 sys.path
+# 将项目根目录加入 sys.path
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
@@ -37,61 +35,50 @@ if str(project_root) not in sys.path:
 from core.executor import AITestExecutor
 from actions.action_registry import action_registry
 
-# 为了向后兼容，重命名函数
+
 def register_all_actions():
-    """注册所有动作的兼容函数"""
+    """注册所有动作"""
     action_registry.discover()
 
-# ------------------
 
-
-def execute_single_test(executor, test_case_path, task_dir=None):
+def execute_single_test(executor, test_case_path, report_dir):
     """
     执行单个测试用例
 
     Args:
         executor: 测试执行器
         test_case_path: 测试用例文件路径
-        task_dir: 任务目录（批量执行时使用）
+        report_dir: 报告输出目录
 
     Returns:
         dict: 测试结果信息
     """
-    print(f"\nStarting execution of test case: {test_case_path.name}")
+    print(f"\n执行测试用例: {test_case_path.name}")
 
     # 读取YAML文件内容
     with open(test_case_path, 'r', encoding='utf-8') as f:
         test_case_yaml = f.read()
 
-    # 如果是批量执行，修改报告输出目录
-    if task_dir:
-        executor.html_reporter.output_dir = str(task_dir)
+    # 设置报告输出目录
+    executor.html_reporter.output_dir = str(report_dir)
 
     # 执行测试用例
     result = executor.execute_test_case(test_case_yaml)
 
     # 打印结果
-    print("\n" + "="*60)
-    print(f"Test Result: {result.status}")
-    print(f"Execution time: {result.execution_time:.2f} seconds")
-    print("="*60)
+    print("\n" + "=" * 60)
+    print(f"测试结果: {result.status}")
+    print(f"执行时间: {result.execution_time:.2f} 秒")
+    print("=" * 60)
 
-    # 获取报告路径
-    report_path = None
-    if executor.html_reporter:
-        # 报告已经在execute_test_case中生成
-        # 获取最新生成的报告路径
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        test_case_id = result.test_case_id
-        report_filename = f"{test_case_id}_{timestamp}.html"
-        if task_dir:
-            report_path = task_dir / report_filename
-        else:
-            report_path = Path(executor.html_reporter.output_dir) / report_filename
+    # 构造报告文件名: {case_code}.html
+    case_code = result.case_code
+    report_filename = f"{case_code}.html"
+    report_path = report_dir / report_filename
 
     return {
-        'test_case_id': result.test_case_id,
-        'test_name': result.test_name,
+        'case_code': result.case_code,
+        'case_name': result.case_name,
         'status': result.status,
         'execution_time': result.execution_time,
         'assertions': executor.execution_details.get('assertions', []),
@@ -100,13 +87,16 @@ def execute_single_test(executor, test_case_path, task_dir=None):
     }
 
 
-def create_index_html(task_dir, results):
+def create_index_html(report_dir, results):
     """
     创建汇总报告 index.html
 
     Args:
-        task_dir: 任务目录
+        report_dir: 报告目录
         results: 测试结果列表
+
+    Returns:
+        Path: index.html 路径
     """
     total_tests = len(results)
     passed_tests = sum(1 for r in results if r['status'] == 'PASS')
@@ -121,7 +111,7 @@ def create_index_html(task_dir, results):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>测试报告汇总 - {task_dir.name}</title>
+    <title>测试报告汇总 - {report_dir.parent.name}</title>
     <style>
         * {{
             margin: 0;
@@ -337,7 +327,7 @@ def create_index_html(task_dir, results):
     <div class="container">
         <div class="header">
             <h1>🧪 测试报告汇总</h1>
-            <div class="subtitle">任务: {task_dir.name}</div>
+            <div class="subtitle">用例批次: {report_dir.parent.name} | 执行批次: {report_dir.name}</div>
         </div>
 
         <div class="summary">
@@ -377,7 +367,7 @@ def create_index_html(task_dir, results):
         total_assertions = len(assertions)
         passed_assertions = sum(1 for a in assertions if a.get('status') == 'PASS')
 
-        # 报告链接
+        # 报告链接 - 使用相对路径
         report_link = result['report_path'].name if result['report_path'] else '#'
 
         html_content += f"""
@@ -385,10 +375,10 @@ def create_index_html(task_dir, results):
                 <div class="test-item-header">
                     <div class="test-item-title">
                         <span class="status-badge {status_class}">{status_text}</span>
-                        <span class="test-id">{result['test_case_id']}</span>
+                        <span class="test-id">{result['case_code']}</span>
                     </div>
                 </div>
-                <div class="test-name">{result['test_name']}</div>
+                <div class="test-name">{result['case_name']}</div>
                 <div class="test-meta">
                     <div class="test-meta-item">
                         <span>⏱️</span>
@@ -418,7 +408,7 @@ def create_index_html(task_dir, results):
 
         <div class="footer">
             <p>生成时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
-            <p>AI测试框架 v1.0</p>
+            <p>AI 测试框架 v2.0</p>
         </div>
     </div>
 </body>
@@ -426,7 +416,7 @@ def create_index_html(task_dir, results):
 """
 
     # 写入文件
-    index_path = task_dir / 'index.html'
+    index_path = report_dir / 'index.html'
     with open(index_path, 'w', encoding='utf-8') as f:
         f.write(html_content)
 
@@ -435,23 +425,23 @@ def create_index_html(task_dir, results):
 
 def main():
     """主函数"""
-    # 解析命令行参数
     parser = argparse.ArgumentParser(
-        description='运行AI测试框架的测试用例（支持单个或批量执行）',
+        description='测试用例执行器 V2（支持单个或批量执行）',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 示例:
   # 单个用例
-  python run_test.py cases/TC_TKF001_001_离线剧本批量生成_正常流程.yaml
+  python case_run_v2.py TDD/REQ-33163-智能剧本推荐/cases/case_20260318_143025/TC_AI_001.yaml
 
   # 批量执行
-  python run_test.py cases
+  python case_run_v2.py TDD/REQ-33163-智能剧本推荐/cases/case_20260318_143025
         """
     )
+
     parser.add_argument(
         'path',
         type=str,
-        help='测试用例文件路径或目录（相对于run_test.py所在目录）'
+        help='测试用例文件路径或目录'
     )
 
     args = parser.parse_args()
@@ -460,34 +450,50 @@ def main():
     register_all_actions()
 
     # 获取路径
-    input_path = project_root / args.path
+    input_path = Path(args.path)
 
     # 检查路径是否存在
     if not input_path.exists():
-        print(f"\nError: 路径不存在: {args.path}")
+        print(f"\n❌ 错误: 路径不存在: {args.path}")
         print(f"   完整路径: {input_path}")
         sys.exit(1)
+
+    # 创建执行批次时间戳
+    run_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
     # 判断是文件还是目录
     if input_path.is_file():
         # 单个测试用例
-        print("="*70)
-        print("  AI Test Framework - Single Test Case Execution")
-        print("="*70)
+        print("=" * 70)
+        print("  AI 测试框架 V2 - 单用例执行")
+        print("=" * 70)
+
+        # 获取用例批次目录 (用例文件的父目录)
+        case_batch_dir = input_path.parent
+
+        # 创建报告目录: TDD/REQ-xxx/reports/case_{batch}/run_{timestamp}
+        req_dir = case_batch_dir.parent.parent
+        report_dir = req_dir / "reports" / case_batch_dir.name / f"run_{run_timestamp}"
+        report_dir.mkdir(parents=True, exist_ok=True)
+
+        print(f"📁 报告输出目录: {report_dir}")
 
         # 初始化执行器
-        print("\nInitializing test executor...")
+        print("\n初始化测试执行器...")
         executor = AITestExecutor()
 
         # 执行测试
-        result = execute_single_test(executor, input_path)
+        result = execute_single_test(executor, input_path, report_dir)
+
+        # 生成汇总报告（即使只有一个用例）
+        index_path = create_index_html(report_dir, [result])
 
         # 打印详细结果
-        print("\n" + "="*70)
+        print("\n" + "=" * 70)
         print("📊 测试结果汇总")
-        print("="*70)
-        print(f"测试用例ID: {result['test_case_id']}")
-        print(f"测试名称: {result['test_name']}")
+        print("=" * 70)
+        print(f"测试用例ID: {result['case_code']}")
+        print(f"测试名称: {result['case_name']}")
         print(f"执行状态: {result['status']}")
         print(f"执行时间: {result['execution_time']:.2f}秒")
 
@@ -500,57 +506,63 @@ def main():
             for assertion in all_assertions:
                 status_icon = "✅" if assertion.get('status') == 'PASS' else "❌"
                 intent = assertion.get('intent', 'N/A')
-                action = assertion.get('action', 'N/A')
                 print(f"  {status_icon} {intent}")
                 if assertion.get('status') == 'FAIL':
+                    action = assertion.get('action', 'N/A')
                     print(f"      动作: {action}")
                     print(f"      错误: {assertion.get('error', 'N/A')}")
 
-        print("="*70)
+        print(f"\n详细报告: {result['report_path']}")
+        print(f"汇总报告: {index_path}")
+        print("=" * 70)
 
     elif input_path.is_dir():
         # 批量执行
-        print("="*70)
-        print("  AI Test Framework - Batch Execution")
-        print("="*70)
+        print("=" * 70)
+        print("  AI 测试框架 V2 - 批量执行")
+        print("=" * 70)
+
+        case_batch_dir = input_path
+
+        # 创建报告目录: TDD/REQ-xxx/reports/case_{batch}/run_{timestamp}
+        req_dir = case_batch_dir.parent.parent
+        report_dir = req_dir / "reports" / case_batch_dir.name / f"run_{run_timestamp}"
+        report_dir.mkdir(parents=True, exist_ok=True)
+
+        print(f"📁 报告输出目录: {report_dir}")
 
         # 查找所有.yaml文件
         yaml_files = sorted(input_path.glob('*.yaml'))
 
         if not yaml_files:
-            print(f"\nWarning: 目录中没有找到.yaml文件: {args.path}")
+            print(f"\n⚠️  警告: 目录中没有找到.yaml文件: {args.path}")
             sys.exit(0)
 
-        print(f"Found {len(yaml_files)} test case files")
-
-        # 创建任务目录
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        task_dir = project_root / 'reports' / f'task_{timestamp}'
-        task_dir.mkdir(parents=True, exist_ok=True)
-
-        print(f"Output Directory: {task_dir}")
+        print(f"找到 {len(yaml_files)} 个测试用例文件")
 
         # 初始化执行器
-        print("\nInitializing test executor...")
+        print("\n初始化测试执行器...")
         executor = AITestExecutor()
 
         # 执行所有测试用例
         results = []
-        print("\n" + "="*70)
-        print("Start executing test cases...")
-        print("="*70)
+        print("\n" + "=" * 70)
+        print("开始执行测试用例...")
+        print("=" * 70)
 
         for i, yaml_file in enumerate(yaml_files, 1):
-            print(f"\n[{i}/{len(yaml_files)}] " + "="*60)
+            print(f"\n[{i}/{len(yaml_files)}] " + "=" * 60)
             try:
-                result = execute_single_test(executor, yaml_file, task_dir)
+                result = execute_single_test(executor, yaml_file, report_dir)
                 results.append(result)
             except Exception as e:
-                print(f"Execution failed: {e}")
+                print(f"执行失败: {e}")
+                import traceback
+                traceback.print_exc()
                 # 记录失败的用例
                 results.append({
-                    'test_case_id': yaml_file.stem,
-                    'test_name': yaml_file.name,
+                    'case_code': yaml_file.stem,
+                    'case_name': yaml_file.name,
                     'status': 'FAIL',
                     'execution_time': 0,
                     'assertions': [],
@@ -559,11 +571,11 @@ def main():
                 })
 
         # 生成汇总报告
-        print("\n" + "="*70)
-        print("Generate Summary Report...")
-        print("="*70)
+        print("\n" + "=" * 70)
+        print("生成汇总报告...")
+        print("=" * 70)
 
-        index_path = create_index_html(task_dir, results)
+        index_path = create_index_html(report_dir, results)
 
         # 打印汇总统计
         total_tests = len(results)
@@ -572,29 +584,28 @@ def main():
         total_time = sum(r['execution_time'] for r in results)
         pass_rate = (passed_tests / total_tests * 100) if total_tests > 0 else 0
 
-        print("\n" + "="*70)
-        print("Batch Execution Summary")
-        print("="*70)
-        print(f"Total Cases: {total_tests}")
-        print(f"Passed: {passed_tests}")
-        print(f"Failed: {failed_tests}")
-        print(f"Pass Rate: {pass_rate:.1f}%")
-        print(f"Total Time: {total_time:.2f} seconds")
-        print(f"\nSummary Report: {index_path}")
-        print("="*70)
+        print("\n" + "=" * 70)
+        print("批量执行汇总")
+        print("=" * 70)
+        print(f"总用例数: {total_tests}")
+        print(f"通过: {passed_tests}")
+        print(f"失败: {failed_tests}")
+        print(f"通过率: {pass_rate:.1f}%")
+        print(f"总耗时: {total_time:.2f} 秒")
+        print(f"\n汇总报告: {index_path}")
+        print("=" * 70)
 
         # 列出失败的用例
         if failed_tests > 0:
-            print("\nFailed test cases:")
+            print("\n失败的测试用例:")
             for result in results:
                 if result['status'] == 'FAIL':
-                    print(f"  - {result['test_case_id']}: {result['test_name']}")
+                    print(f"  - {result['case_code']}: {result['case_name']}")
 
     else:
-        print(f"\nError: 路径既不是文件也不是目录: {args.path}")
+        print(f"\n❌ 错误: 路径既不是文件也不是目录: {args.path}")
         sys.exit(1)
 
 
 if __name__ == '__main__':
     main()
-
