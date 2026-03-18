@@ -1,0 +1,46 @@
+case_code: TC_AI_copilot_ai_script_generate_002
+case_name: AI剧本信息实时生成_ai执行编号不存在_返回422
+element_code: AI_copilot_ai_script_generate
+element_name: AI剧本信息实时生成
+priority: P1
+auto_level: L3
+dependent_elements:
+- element_code: AD_copilot_ai_execute_config
+  element_name: AI执行配置表
+- element_code: AD_copilot_ai_script_recommendation_log
+  element_name: 剧本推荐日志表
+test_intent:
+  preconditions:
+  - intent: 前置1：清理配置表中相关数据
+    action: database_delete
+    params:
+      database: copilot
+      table: ai_execute_config
+      where: code='INVALID_CODE'
+  test_steps:
+  - intent: 步骤1：调用AI剧本生成接口-使用不存在的执行编号
+    action: call_http_api
+    params:
+      application: copilot
+      endpoint: /copilot/ai/script/generate
+      method: POST
+      headers:
+        Content-Type: application/json
+      body:
+        serial_id: ${uuid()}
+        uid: test_user_002
+        source: autotest2
+        triger_scene: REPAY_SUCCESS
+        aiExecuteCode: INVALID_CODE
+        queue: ai_play_queue
+    assertions:
+    - intent: 断言1：校验API响应状态码为422
+      action: assert_value
+      params:
+        actual: ${context.http_response.status_code}
+        expected: 422
+    - intent: 断言2：校验API响应错误信息
+      action: assert_value
+      params:
+        actual: ${context.http_response.body.message}
+        expected: ai执行编号不存在

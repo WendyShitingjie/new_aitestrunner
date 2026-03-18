@@ -1,0 +1,84 @@
+case_code: TC_AI_copilot_ai_script_generate_005
+case_name: AI剧本信息实时生成_幂等处理命中FAILURE_返回PROCESSING
+element_code: AI_copilot_ai_script_generate
+element_name: AI剧本信息实时生成
+priority: P1
+auto_level: L3
+dependent_elements:
+- element_code: AD_copilot_ai_execute_config
+  element_name: AI执行配置表
+- element_code: AD_copilot_ai_script_recommendation_log
+  element_name: 剧本推荐日志表
+test_intent:
+  preconditions:
+  - intent: 前置1：清理历史数据
+    action: database_delete
+    params:
+      database: copilot
+      table: ai_script_recommendation_log
+      where: serial_id='test_serial_005'
+  - intent: 前置2：构造配置数据
+    action: database_insert
+    params:
+      database: copilot
+      table: ai_execute_config
+      data:
+        name: AI剧本生成配置
+        code: AI_SCRIPT_RECOMMANDATION_5
+        type: flow
+        agent_workflow_code: 25b65c76c7054f9785f303bc92d0c0b6
+        source: postLoan
+  - intent: 前置3：构造失败的记录
+    action: database_insert
+    params:
+      database: copilot
+      table: ai_script_recommendation_log
+      data:
+        serial_id: test_serial_005
+        uid: test_user_005
+        queue: ai_play_queue_22
+        ai_execute_code: AI_SCRIPT_RECOMMANDATION_5
+        triger_scene: REPAY_SUCCESS
+        input_data: '{"uid":"test_user_005","overdueCnt":1,"contents":"原始内容"}'
+        output_data: ''
+        execute_status: FAILURE
+        failure_reason: AI平台调用失败
+        source: autotest2
+  test_steps:
+  - intent: 步骤1：使用相同serial_id再次调用AI剧本生成接口
+    action: call_http_api
+    params:
+      application: copilot
+      endpoint: /copilot/ai/script/generate
+      method: POST
+      headers:
+        Content-Type: application/json
+      body:
+        serial_id: test_serial_005
+        uid: test_user_005
+        source: autotest2
+        triger_scene: REPAY_SUCCESS
+        aiExecuteCode: AI_SCRIPT_RECOMMANDATION_5
+        queue: ai_play_queue
+    assertions:
+    - intent: 断言1：校验API响应状态码为200
+      action: assert_value
+      params:
+        actual: ${context.http_response.status_code}
+        expected: 200
+    - intent: 断言2：校验API响应状态为PROCESSING
+      action: assert_value
+      params:
+        actual: ${context.http_response.body.generateStatus}
+        expected: PROCESSING
+    - intent: 断言3：校验数据库中记录状态已更新为PROCESSING
+      action: assert_database_field
+      params:
+        database: copilot
+        table: ai_script_recommendation_log
+        field: execute_status
+        where: serial_id='test_serial_005'
+        expected: PROCESSING
+        operator: 等于
+        timeout: 30
+        interval: 2

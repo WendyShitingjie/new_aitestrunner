@@ -1,0 +1,91 @@
+case_code: TC_AI_copilot_ai_script_generate_004
+case_name: AI剧本信息实时生成_幂等处理成功状态_返回SUCCESS结果
+element_code: AI_copilot_ai_script_generate
+element_name: AI剧本信息实时生成
+priority: P1
+auto_level: L3
+dependent_elements:
+- element_code: AD_copilot_ai_execute_config
+  element_name: AI执行配置表
+- element_code: AD_copilot_ai_script_recommendation_log
+  element_name: 剧本推荐日志表
+- element_code: AD_copilot_ai_script_recommendation
+  element_name: 剧本推荐表
+test_intent:
+  preconditions:
+  - intent: 前置1：清理历史测试数据
+    action: database_delete
+    params:
+      database: copilot
+      table: ai_script_recommendation_log
+      where: serial_id='idempotent_serial_004' OR uid='test_uid_004'
+  - intent: 前置2：清理配置表数据
+    action: database_delete
+    params:
+      database: copilot
+      table: ai_execute_config
+      where: code='TEST_SCRIPT_GEN_004'
+  - intent: 前置3：插入AI执行配置
+    action: database_insert
+    params:
+      database: copilot
+      table: ai_execute_config
+      data:
+        name: 测试剧本生成配置
+        code: TEST_SCRIPT_GEN_004
+        type: flow
+        agent_workflow_code: 25b65c76c7054f9785f303bc92d0c0b6
+        source: postLoan
+  - intent: 前置4：插入已成功的幂等记录
+    action: database_insert
+    params:
+      database: copilot
+      table: ai_script_recommendation_log
+      data:
+        serial_id: idempotent_serial_004
+        uid: test_uid_004
+        queue: test_queue
+        ai_execute_code: TEST_SCRIPT_GEN_004
+        triger_scene: REPAY_SUCCESS
+        input_data: '{"uid":"test_uid_004","contents":"测试内容"}'
+        output_data: '{"character":"还呗财务部","target":"本人","pressure_points":[{"point":"施压点1","script":["话术11","话术12"]}],"resp_code":"1","resp_msg":"success"}'
+        execute_status: SUCCESS
+        source: postLoan
+  test_steps:
+  - intent: 步骤1：再次调用AI剧本生成接口-相同serial_id
+    action: call_http_api
+    params:
+      application: copilot
+      endpoint: /copilot/ai/script/generate
+      method: POST
+      body:
+        serial_id: idempotent_serial_004
+        uid: test_uid_004
+        source: postLoan
+        triger_scene: REPAY_SUCCESS
+        aiExecuteCode: TEST_SCRIPT_GEN_004
+        queue: test_queue
+    assertions:
+    - intent: 断言1：校验API响应状态码
+      action: assert_value
+      params:
+        actual: ${context.http_response.status_code}
+        expected: 200
+    - intent: 断言2：校验API响应生成状态为SUCCESS
+      action: assert_value
+      params:
+        actual: ${context.http_response.body.generateStatus}
+        expected: SUCCESS
+    - intent: 断言3：校验API响应包含剧本内容
+      action: assert_value
+      params:
+        actual: ${context.http_response.body.scriptContent.character}
+        expected: 还呗财务部
+    - intent: 断言4：校验数据库记录状态仍为SUCCESS
+      action: assert_database_field
+      params:
+        database: copilot
+        table: ai_script_recommendation_log
+        field: execute_status
+        where: serial_id='idempotent_serial_004'
+        expected: SUCCESS

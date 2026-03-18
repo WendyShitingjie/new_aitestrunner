@@ -24,7 +24,11 @@ from openai import OpenAI
 from config.settings import settings
 from datetime import datetime
 import subprocess
+import os
+from dotenv import load_dotenv
 
+# 加载 .env 文件
+load_dotenv()
 
 class CaseGeneratorV2:
     """测试用例生成器 V2"""
@@ -63,10 +67,13 @@ class CaseGeneratorV2:
         print(f"📁 用例批次目录: {self.case_batch_dir}")
 
         # 加载 LLM 配置
-        llm_config = settings.get('llm')
-        self.api_key = llm_config.get('api_key')
-        self.base_url = llm_config.get('base_url')
-        self.model = llm_config.get('model')
+        # llm_config = settings.get('llm')
+        # self.api_key = llm_config.get('api_key')
+        # self.base_url = llm_config.get('base_url')
+        # self.model = llm_config.get('model')
+        self.api_key = os.getenv('LLM_API_KEY')
+        self.base_url = os.getenv('LLM_BASE_URL')
+        self.model = os.getenv('LLM_MODEL')
         print(f"🤖 LLM 模型: {self.model}")
 
         # 初始化 OpenAI 客户端
