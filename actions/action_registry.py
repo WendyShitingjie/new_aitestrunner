@@ -125,7 +125,17 @@ class ActionRegistry:
         try:
             import actions.generic.print
         except ImportError as e:
-            print(f"Warning: 无法导入���作模块 actions.generic.print: {e}")
+            print(f"Warning: 无法导入动作模块 actions.generic.print: {e}")
+
+        try:
+            import actions.generic.bridge_skill
+        except ImportError as e:
+            print(f"Warning: 无法导入动作模块 actions.generic.bridge_skill: {e}")
+
+        try:
+            import actions.generic.skill
+        except ImportError as e:
+            print(f"Warning: 无法导入动作模块 actions.generic.skill: {e}")
 
         # Import all business action modules
         try:

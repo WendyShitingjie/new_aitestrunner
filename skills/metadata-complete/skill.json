@@ -1,0 +1,40 @@
+{
+  "name": "metadata-complete",
+  "displayName": "自动化执行 MySQL 库表元数据完整性管理，串联调用 GET 和 POST 接口完成元数据查询、字段补充和管理操作。",
+  "description": "元数据完整性",
+  "command": "/metadata-complete",
+  "entrypoint": "scripts/index.py",
+  "permissions": {
+    "bash": false,
+    "filesystem": false
+  },
+  "args": [
+    {
+      "name": "instance",
+      "description": "MySQL 实例标识（必填）",
+      "required": true
+    },
+    {
+      "name": "database",
+      "description": "数据库名称（必填）",
+      "required": true
+    },
+    {
+      "name": "table",
+      "description": "数据表名称（必填）",
+      "required": true
+    },
+    {
+      "name": "existUpdate",
+      "description": "是否存在更新操作（true/false，默认 true）",
+      "required": false,
+      "default": "true"
+    },
+    {
+      "name": "existDelete",
+      "description": "是否存在删除操作（true/false，默认 false）",
+      "required": false,
+      "default": "false"
+    }
+  ]
+}

@@ -23,6 +23,13 @@ database:
     password: "sit_user_d1146cc_73dfbc"
     database: "ares"
 
+  dataops:
+    host: "bigdata-biz.db.ali-bj-bdsit01.shuheo.net"
+    port: 3306
+    user: "bdsit_user_0e0bc33"
+    password: "bdsit_user_0e0bc33_26587a"
+    database: "dataops"
+
 # AI服务配置
 ai_service:
   provider: "openai"  # openai, anthropic, custom
@@ -45,6 +52,11 @@ http_api:
   aresplus:
     base_url: "http://aresplus.apps01.ali-bj-sit03.shuheo.net"
     timeout: 60
+   #2026.03.20添加dataops服务
+  dataops:
+    base_url: "http://dataops.apps01.ali-bj-sit03.shuheo.net"
+    timeout: 60
+
 
 # JOB配置
 job:

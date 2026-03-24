@@ -1,0 +1,11 @@
+{
+  "name": "test-create-jdbctable",
+  "displayName": "JDBC 测试表生成器",
+  "description": "快速生成符合规范或违反规范的测试表和测试数据，支持 MySQL、TiDB、ADB 等数据库",
+  "command": "/test-create-jdbctable",
+  "entrypoint": "index.py",
+  "permissions": {
+    "bash": true,
+    "filesystem": true
+  }
+}

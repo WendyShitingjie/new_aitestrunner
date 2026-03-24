@@ -162,13 +162,46 @@ class CallHttpApiAction(ExecutionAction):
 
         # 构建请求头
         headers = params.get('headers', {})
-        if 'Content-Type' not in headers and method in ['POST', 'PUT', 'PATCH']:
+        content_type = params.get('content_type', '').lower()
+        
+        if content_type == 'multipart/form-data':
+            # multipart 上传时不设置 Content-Type，让 requests 自动生成 boundary
+            pass
+        elif 'Content-Type' not in headers and method in ['POST', 'PUT', 'PATCH']:
             headers['Content-Type'] = 'application/json'
+        
+        # 对 headers 中的中文值进行 URL 编码
+        from urllib.parse import quote
+        encoded_headers = {}
+        for key, value in headers.items():
+            if isinstance(value, str) and any('\u4e00' <= c <= '\u9fff' for c in value):
+                encoded_headers[key] = quote(value, safe='')
+            else:
+                encoded_headers[key] = value
+        headers = encoded_headers
 
         # 构建请求体
         body = params.get('body')
-        if body and isinstance(body, dict) and headers.get('Content-Type') == 'application/json':
-            body = json.dumps(body, ensure_ascii=False)
+        files = None
+        
+        if content_type == 'multipart/form-data' and body:
+            # 处理 multipart 文件上传
+            files = {}
+            for key, value in body.items():
+                if isinstance(value, str) and value.startswith('/'):
+                    # 文件路径
+                    try:
+                        files[key] = open(value, 'rb')
+                    except FileNotFoundError:
+                        return {
+                            'status': 'FAIL',
+                            'message': f"文件不存在: {value}"
+                        }
+                else:
+                    # 普通字段
+                    files[key] = (None, value)
+        elif body and isinstance(body, dict) and headers.get('Content-Type') == 'application/json':
+            body = json.dumps(body, ensure_ascii=False).encode('utf-8')
 
         # 构建查询参数
         query_params = params.get('query_params')
@@ -181,6 +214,7 @@ class CallHttpApiAction(ExecutionAction):
                 headers=headers,
                 params=query_params,
                 data=body,
+                files=files,
                 timeout=timeout,
                 verify=verify_ssl
             )
@@ -231,10 +265,11 @@ class CallHttpApiAction(ExecutionAction):
             }
 
         except Exception as e:
+            import traceback
             return {
                 'status': 'FAIL',
                 'status_code': None,
                 'response_body': None,
                 'response_headers': None,
-                'message': f'HTTP请求异常: {method} {url} - {str(e)}'
+                'message': f'HTTP请求异常: {method} {url} - {str(e)}\n{traceback.format_exc()}'
             }

@@ -1,0 +1,11 @@
+{
+  "name": "mq-sender",
+  "displayName": "通用 MQ 发信机",
+  "description": "通过 mqplus 统一网关向不同业务队列投递消息，支持自动化双重序列化，配合业务构造协议 MD 实现全场景覆盖",
+  "command": "/mq-sender",
+  "entrypoint": "index.py",
+  "permissions": {
+    "bash": true,
+    "filesystem": false
+  }
+}

@@ -171,10 +171,16 @@ class CaseGeneratorV2:
         """
         print("\n🔧 正在构建用户提示词...")
 
-        # 读取用户提示词模板
-        user_prompt_template = self.read_file(
-            self.project_root / "prompt" / "prompt.case_script_gen.user.md"
-        )
+        # 优先使用需求级 prompt，否则使用项目级
+        req_prompt_path = self.req_dir / "prompt_case_gen.user.md"
+        if req_prompt_path.exists():
+            print(f"   ✓ 使用需求级提示词: {req_prompt_path}")
+            user_prompt_template = self.read_file(req_prompt_path)
+        else:
+            print(f"   ✓ 使用项目级提示词")
+            user_prompt_template = self.read_file(
+                self.project_root / "prompt" / "prompt.case_script_gen.user.md"
+            )
 
         # 构造目标知识要素部分
         element_def_yaml = f"#### {target_element['code']} - {target_element['name']}\n"
@@ -187,7 +193,8 @@ class CaseGeneratorV2:
             dependent_elements_def_yaml += f"```yaml\n{dep['content']}\n```\n\n"
 
         # 替换占位符
-        user_prompt = user_prompt_template.replace("{element_def_yaml}", element_def_yaml)
+        user_prompt = user_prompt_template.replace("{element_name}", target_element['name'])
+        user_prompt = user_prompt.replace("{element_def_yaml}", element_def_yaml)
         user_prompt = user_prompt.replace("{dependent_elements_def_yaml}", dependent_elements_def_yaml)
 
         print("   ✓ 用户提示词构建完成")

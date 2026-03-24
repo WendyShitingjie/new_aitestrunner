@@ -1,0 +1,53 @@
+{
+  "scenarios": {
+    "success": {
+      "description": "成功场景-增量合并",
+      "extract": "ins",
+      "process": "merge"
+    },
+    "success_all": {
+      "description": "成功场景-全量覆盖",
+      "extract": "all",
+      "process": "all"
+    },
+    "success_ins": {
+      "description": "成功场景-增量分区",
+      "extract": "ins",
+      "process": "ins"
+    },
+    "failed_F001": {
+      "description": "异常场景-字段缺失",
+      "type": "column_missing",
+      "action": {
+        "operation": "remove_column",
+        "column_index": -1,
+        "reason": "删除最后一列（抽数主键）"
+      }
+    },
+    "failed_F002": {
+      "description": "异常场景-字段格式错误",
+      "type": "invalid_format",
+      "action": {
+        "operation": "set_value",
+        "column_index": 15,
+        "value": "25:99",
+        "reason": "调度时间格式错误"
+      }
+    },
+    "failed_F003": {
+      "description": "异常场景-联动规则冲突",
+      "type": "rule_conflict",
+      "extract": "all",
+      "process": "merge",
+      "reason": "抽数方式与处理方式不匹配"
+    },
+    "failed_F004": {
+      "description": "异常场景-元数据未完善",
+      "type": "metadata_incomplete",
+      "skip_metadata": true,
+      "extract": "ins",
+      "process": "merge",
+      "reason": "表存在但未完善元数据"
+    }
+  }
+}
