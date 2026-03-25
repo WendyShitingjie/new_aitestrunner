@@ -105,14 +105,21 @@ def set_sensitive_fields(instance, database, table, sensitive_fields_config):
 
     # 步骤3：提交元数据管理
     print('[步骤3] 提交元数据管理到服务器...')
+
+    # 从原始元数据中获取 existUpdate 和 existDelete 的值
+    exist_update = metadata.get('existUpdate', True)
+    exist_delete = metadata.get('existDelete', True)
+
+    print(f'  保持原有配置: existUpdate={exist_update}, existDelete={exist_delete}')
+
     success = manager.manage_metadata(
         instance=instance,
         database=database,
         p_n=p_n,
         p_u=p_u,
         table_name=table_name,
-        exist_update=True,
-        exist_delete=True,
+        exist_update=exist_update,
+        exist_delete=exist_delete,
         column_metadata=column_metadata
     )
 

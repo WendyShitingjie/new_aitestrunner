@@ -181,6 +181,7 @@ def batch_workflow(
         print(f"步骤 2: 跳过元数据完善（{scenario} 场景）")
         print("=" * 70)
         completed_tables = created_tables
+        print("✅ 跳过元数据完善步骤，表将保持未完善状态")
     else:
         print("\n" + "=" * 70)
         print("步骤 2: 完善元数据")
