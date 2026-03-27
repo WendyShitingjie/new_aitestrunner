@@ -37,8 +37,8 @@ def get_output_path(custom_path=None):
     if custom_path:
         return os.path.abspath(custom_path)
 
-    # 从 scripts/config.py 向上1层到 skill 目录
-    script_dir = os.path.dirname(os.path.abspath(__file__))
+    # 从 scripts/config.py 向上1层到 skill 目录（使用realpath获取真实路径）
+    script_dir = os.path.dirname(os.path.realpath(__file__))
     project_root = os.path.dirname(script_dir)
     return os.path.join(project_root, DEFAULT_OUTPUT_DIR)
 
@@ -50,8 +50,8 @@ def get_relative_output_path():
     Returns:
         相对路径，如 skills/jdbc-warehouse-test/test_excel
     """
-    # 获取 skill 名称
-    script_dir = os.path.dirname(os.path.abspath(__file__))
+    # 获取 skill 名称（使用realpath获取真实路径）
+    script_dir = os.path.dirname(os.path.realpath(__file__))
     skill_dir = os.path.dirname(script_dir)  # skill 目录
     skill_name = os.path.basename(skill_dir)
     
