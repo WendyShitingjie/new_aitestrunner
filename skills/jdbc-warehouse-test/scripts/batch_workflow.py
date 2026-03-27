@@ -267,7 +267,7 @@ def batch_workflow(
     # 同时输出相对路径和绝对路径，供框架灵活选择
     relative_path = os.path.join(config.get_relative_output_path(), os.path.basename(output_file))
     print(f"相对路径: {relative_path}")
-    print(f"绝对路径: {output_file}")
+    print(f"绝对路径: {os.path.abspath(output_file)}")
 
     print("\n" + "=" * 70)
     print("工作流完成！")
