@@ -176,9 +176,17 @@ class BridgeSkillAction(ExecutionAction):
 
     def _extract_file_path(self, output: str, skill_name: str, action: str) -> str:
         """从输出中提取文件路径"""
+        # 优先提取绝对路径
         for line in output.split('\n'):
-            if '文件路径:' in line:
-                return line.split('文件路径:')[-1].strip()
+            if '绝对路径:' in line:
+                path = line.split('绝对路径:')[-1].strip()
+                if path:
+                    return path
+        
+        # 其次提取相对路径
+        for line in output.split('\n'):
+            if '相对路径:' in line:
+                return line.split('相对路径:')[-1].strip()
             if 'file:' in line.lower() and '.xlsx' in line.lower():
                 parts = line.split(':')
                 if len(parts) > 1:

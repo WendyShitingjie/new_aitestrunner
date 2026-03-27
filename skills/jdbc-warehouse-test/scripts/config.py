@@ -26,7 +26,7 @@ DEFAULT_OUTPUT_DIR = "test_excel"
 
 def get_output_path(custom_path=None):
     """
-    获取输出路径
+    获取输出路径（绝对路径）
 
     Args:
         custom_path: 自定义路径（可选）
@@ -41,6 +41,22 @@ def get_output_path(custom_path=None):
     script_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(script_dir)
     return os.path.join(project_root, DEFAULT_OUTPUT_DIR)
+
+
+def get_relative_output_path():
+    """
+    获取输出路径（相对于 skills 目录）
+
+    Returns:
+        相对路径，如 skills/jdbc-warehouse-test/test_excel
+    """
+    # 获取 skill 名称
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    skill_dir = os.path.dirname(script_dir)  # skill 目录
+    skill_name = os.path.basename(skill_dir)
+    
+    # 返回相对于 skills 的路径
+    return os.path.join("skills", skill_name, DEFAULT_OUTPUT_DIR)
 
 
 # ============= 文件命名配置 =============

@@ -118,7 +118,10 @@ class XlsxGenerator:
             print(f"\n{'='*60}")
             print("✅ 测试文件生成完成")
             print(f"{'='*60}")
-            print(f"文件路径: {file_path}")
+            # 同时输出相对路径和绝对路径，供框架灵活选择
+            relative_path = os.path.join(config.get_relative_output_path(), filename)
+            print(f"相对路径: {relative_path}")
+            print(f"绝对路径: {file_path}")
             print(f"文件名称: {filename}")
             print(f"{'='*60}\n")
 
