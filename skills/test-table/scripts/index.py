@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 测试表生成器 - 支持 MySQL、TiDB、ADB 等 JDBC 数据库
 可以在 PyCharm 中直接运行，也可以作为 Claude Code skill 使用

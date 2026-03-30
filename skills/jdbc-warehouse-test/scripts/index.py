@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 JDBC Warehouse Test Skill - 入口脚本
 支持命令行直接调用和 Claude Code skill 调用
@@ -14,7 +15,7 @@ import config
 
 def call_test_table(source_table, env):
     """
-    调用 test-table skill 创建表
+    调用 test-table skill 克隆表
 
     Args:
         source_table: 源表名
@@ -32,11 +33,12 @@ def call_test_table(source_table, env):
         )
 
         result = subprocess.run(
-            ["python", test_table_script, "copy-table",
+            ["python3", test_table_script, "copy-table",
              "--sourceTable", source_table,
              "--env", env],
             capture_output=True,
-            text=True
+            text=True,
+            env={**os.environ, "PYTHONIOENCODING": "utf-8"}
         )
 
         if result.returncode == 0:
@@ -56,6 +58,74 @@ def call_test_table(source_table, env):
     except Exception as e:
         print(f"[test-table] ✗ 调用失败: {str(e)}")
         return None
+
+
+def call_test_table_generate(env, db_type='adb', table_prefix='test_auto'):
+    """
+    调用 test-table skill 生成默认结构的新表
+
+    Args:
+        env: 环境名
+        db_type: 数据库类型
+        table_prefix: 表名前缀
+
+    Returns:
+        str: 新表名，失败返回 None
+    """
+    try:
+        import time
+        timestamp = int(time.time())
+        table_name = f"{table_prefix}_{timestamp}"
+
+        print(f"\n[test-table] 正在生成默认结构表 {table_name}...")
+
+        test_table_script = os.path.join(
+            os.path.dirname(__file__),
+            "../../test-table/scripts/index.py"
+        )
+
+        result = subprocess.run(
+            ["python3", test_table_script, "generate",
+             "--tableName", table_name,
+             "--dataType", "mixed",
+             "--env", env,
+             "--dbType", db_type,
+             "--execute"],
+            capture_output=True,
+            text=True,
+            env={**os.environ, "PYTHONIOENCODING": "utf-8"}
+        )
+
+        if result.returncode == 0:
+            print(f"[test-table] ✓ 表生成成功: {table_name}")
+            return table_name
+        else:
+            print(f"[test-table] ✗ 生成失败: {result.stderr}")
+            return None
+
+    except Exception as e:
+        print(f"[test-table] ✗ 调用失败: {str(e)}")
+        return None
+
+
+def infer_env_from_database(database: str) -> str:
+    """
+    从数据库名推断环境名
+
+    Args:
+        database: 数据库名
+
+    Returns:
+        str: 环境名，未找到返回 None
+    """
+    db_to_env = {
+        'dataops_shitingjie': 'cjjcommon',
+        'stjtestadb': 'adb-realtime',
+        'ares': 'tidb-ares',
+        'datahub': 'cjjloan',
+        'dataops': 'bigdata-biz-dataops',
+    }
+    return db_to_env.get(database)
 
 
 def call_metadata_complete(database, table):
@@ -160,6 +230,12 @@ def main():
         help='是否完善元数据（默认：true）'
     )
 
+    gen_parser.add_argument(
+        '--tablePrefix',
+        default='test_auto',
+        help='自动生成表时的表名前缀（默认：test_auto）'
+    )
+
     args = parser.parse_args()
 
     if args.command != 'generate':
@@ -200,8 +276,33 @@ def main():
 
     # 验证必需参数
     if not database or not table:
-        print("✗ 错���: 必须提供 --database 和 --table")
-        return 1
+        # 如果没有提供 table 但提供了 env 或 database，自动生成一个默认结构的表
+        if not table and (args.env or args.database):
+            # 双向推断：env ↔ database
+            if args.env and not args.database:
+                env_db_mapping = {
+                    'adb-realtime': 'stjtestadb',
+                    'tidb-ares': 'ares',
+                    'cjjcommon': 'dataops_shitingjie'
+                }
+                database = args.database or env_db_mapping.get(args.env)
+            elif args.database and not args.env:
+                args.env = infer_env_from_database(args.database)
+
+            if not args.env:
+                print("✗ 错误: 无法从 database 推断环境，请使用 --env 指定")
+                return 1
+
+            db_type = args.dbType or 'adb'
+            new_table = call_test_table_generate(args.env, db_type, args.tablePrefix)
+            if not new_table:
+                print("✗ 自动生成表失败")
+                return 1
+            table = new_table
+            database = args.database
+        else:
+            print("✗ 错误: 必须提供 --database 和 --table，或提供 --env 自动生成")
+            return 1
 
     # 完善元数据
     if args.completeMetadata and args.scenario != 'failed_F004':
