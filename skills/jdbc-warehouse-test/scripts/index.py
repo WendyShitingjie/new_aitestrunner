@@ -6,11 +6,19 @@ JDBC Warehouse Test Skill - 入口脚本
 """
 import sys
 import os
+import json
 import argparse
 import subprocess
 
 from xlsx_generator import XlsxGenerator
 import config
+import template_updater
+
+
+def log(msg):
+    """输出到 stderr"""
+    sys.stderr.write(str(msg) + "\n")
+    sys.stderr.flush()
 
 
 def call_test_table(source_table, env):
@@ -25,7 +33,7 @@ def call_test_table(source_table, env):
         str: 新表名，失败返回 None
     """
     try:
-        print(f"\n[test-table] 正在克隆表 {source_table}...")
+        log(f"\n[test-table] 正在克隆表 {source_table}...")
 
         test_table_script = os.path.join(
             os.path.dirname(__file__),
@@ -42,21 +50,20 @@ def call_test_table(source_table, env):
         )
 
         if result.returncode == 0:
-            # 从输出中提取新表名
             for line in result.stdout.split('\n'):
                 if '✓ 自动生成目标表名:' in line:
                     new_table = line.split(':')[-1].strip()
-                    print(f"[test-table] ✓ 表克隆成功: {new_table}")
+                    log(f"[test-table] ✓ 表克隆成功: {new_table}")
                     return new_table
 
-            print("[test-table] ⚠️  未能获取新表名")
+            log("[test-table] ⚠️  未能获取新表名")
             return None
         else:
-            print(f"[test-table] ✗ 克隆失败: {result.stderr}")
+            log(f"[test-table] ✗ 克隆失败: {result.stderr}")
             return None
 
     except Exception as e:
-        print(f"[test-table] ✗ 调用失败: {str(e)}")
+        log(f"[test-table] ✗ 调用失败: {str(e)}")
         return None
 
 
@@ -77,7 +84,7 @@ def call_test_table_generate(env, db_type='adb', table_prefix='test_auto'):
         timestamp = int(time.time())
         table_name = f"{table_prefix}_{timestamp}"
 
-        print(f"\n[test-table] 正在生成默认结构表 {table_name}...")
+        log(f"\n[test-table] 正在生成默认结构表 {table_name}...")
 
         test_table_script = os.path.join(
             os.path.dirname(__file__),
@@ -97,14 +104,14 @@ def call_test_table_generate(env, db_type='adb', table_prefix='test_auto'):
         )
 
         if result.returncode == 0:
-            print(f"[test-table] ✓ 表生成成功: {table_name}")
+            log(f"[test-table] ✓ 表生成成功: {table_name}")
             return table_name
         else:
-            print(f"[test-table] ✗ 生成失败: {result.stderr}")
+            log(f"[test-table] ✗ 生成失败: {result.stderr}")
             return None
 
     except Exception as e:
-        print(f"[test-table] ✗ 调用失败: {str(e)}")
+        log(f"[test-table] ✗ 调用失败: {str(e)}")
         return None
 
 
@@ -140,7 +147,7 @@ def call_metadata_complete(database, table):
         bool: 是否成功
     """
     try:
-        print(f"\n[metadata-complete] 正在完善元数据...")
+        log(f"\n[metadata-complete] 正在完善元数据...")
 
         metadata_script = os.path.join(
             os.path.dirname(__file__),
@@ -148,7 +155,7 @@ def call_metadata_complete(database, table):
         )
 
         result = subprocess.run(
-            ["python", metadata_script,
+            ["python3", metadata_script,
              "--database", database,
              "--table", table],
             capture_output=True,
@@ -156,14 +163,14 @@ def call_metadata_complete(database, table):
         )
 
         if result.returncode == 0:
-            print("[metadata-complete] ✓ 元数据完善成功")
+            log("[metadata-complete] ✓ 元数据完善成功")
             return True
         else:
-            print(f"[metadata-complete] ⚠️  元数据完善失败，但继续生成测试文件")
+            log(f"[metadata-complete] ⚠️  元数据完善失败，但继续生成测试文件")
             return False
 
     except Exception as e:
-        print(f"[metadata-complete] ✗ 调用失败: {str(e)}")
+        log(f"[metadata-complete] ✗ 调用失败: {str(e)}")
         return False
 
 
@@ -184,8 +191,14 @@ def main():
     )
 
     gen_parser.add_argument(
+        '--tables',
+        nargs='+',
+        help='表名列表（如：adb_json_batch_01 adb_json_batch_02）'
+    )
+
+    gen_parser.add_argument(
         '--table',
-        help='表名（如：adb_json_batch_01）'
+        help='表名（单表模式，如：adb_json_batch_01）'
     )
 
     gen_parser.add_argument(
@@ -245,17 +258,116 @@ def main():
     # ========== 执行流程 ==========
 
     database = args.database
+
+    # 检查场景配置是否需要跳过元数据完善
+    scenario_skip_metadata = False
+    scenario_config_path = os.path.join(os.path.dirname(__file__), 'scenario_config.json')
+    if os.path.exists(scenario_config_path):
+        with open(scenario_config_path, 'r') as f:
+            scenario_data = json.load(f).get('scenarios', {}).get(args.scenario or 'success', {})
+            scenario_skip_metadata = scenario_data.get('skip_metadata', False)
+
+    # 多表模式：使用 template_updater
+    if args.tables:
+        tables = args.tables
+        
+        # 如果提供了 --tablePrefix，自动生成新表
+        if args.tablePrefix:
+            if not args.env:
+                log("✗ 错误: 自动生成表需要提供 --env")
+                return 1
+            
+            prefix = args.tablePrefix
+            db_type = args.dbType or 'mysql'
+            table_count = len(tables)
+            
+            tables = []
+            for i in range(1, table_count + 1):
+                table_name = f"{prefix}_{i}"
+                log(f"\n[自动创建] 正在生成表 {table_name}...")
+                new_table = call_test_table_generate(args.env, db_type, table_name)
+                if new_table:
+                    tables.append(new_table)
+                    if not scenario_skip_metadata:
+                        call_metadata_complete(database, new_table)
+                else:
+                    log(f"✗ 表 {table_name} 创建失败")
+            
+            if len(tables) == 0:
+                log("✗ 没有成功创建任何表")
+                return 1
+        
+        if not database:
+            log("✗ 错误: 多表模式必须提供 --database")
+            return 1
+
+        log(f"\n[批量模式] 正在为 {len(tables)} 个表生成测试文件...")
+
+        # 完善元数据
+        if args.completeMetadata and not scenario_skip_metadata:
+            for t in tables:
+                call_metadata_complete(database, t)
+
+        # 使用 template_updater 生成多表测试文件
+        try:
+            output_file = template_updater.update_template_batch(
+                instance=args.env or infer_env_from_database(database),
+                database=database,
+                tables=tables,
+                db_type=args.dbType or 'mysql',
+                extract_method='ins',
+                deal_method='merge',
+                scenario=args.scenario or 'success'
+            )
+
+            output = {
+                "status": "success",
+                "instances": [args.env or infer_env_from_database(database)],
+                "databases": [database],
+                "tables": tables,
+                "file_info": {
+                    "file_name": os.path.basename(output_file),
+                    "absolute_path": os.path.abspath(output_file),
+                    "relative_path": output_file.replace(os.getcwd() + '/', ''),
+                    "table_count": len(tables)
+                },
+                "config": {
+                    "db_type": args.dbType or 'mysql',
+                    "scenario": args.scenario,
+                    "scenario_desc": config.SCENARIOS.get(args.scenario, ''),
+                    "op_type": "ins",
+                    "process_type": "merge"
+                }
+            }
+
+            print("```json\n" + json.dumps(output, ensure_ascii=False, indent=2) + "\n```")
+            return 0
+
+        except Exception as e:
+            output = {
+                "status": "error",
+                "error_code": "MULTI_TABLE_FAILED",
+                "message": str(e),
+                "received_params": {
+                    "database": database,
+                    "tables": tables,
+                    "scenario": args.scenario
+                }
+            }
+            print("```json\n" + json.dumps(output, ensure_ascii=False, indent=2) + "\n```")
+            return 1
+
     table = args.table
 
     # 集成模式：先创建表
     if args.createTable:
         if not args.sourceTable or not args.env:
-            print("✗ 错误: --createTable 模式需要提供 --sourceTable 和 --env")
+            log("✗ 错误: --createTable 模式需要提供 --sourceTable 和 --env")
             return 1
 
         new_table = call_test_table(args.sourceTable, args.env)
         if not new_table:
-            print("✗ 创建表失败")
+            log("✗ 创建表失败")
             return 1
 
         table = new_table
@@ -271,7 +383,7 @@ def main():
             }
             database = env_db_mapping.get(args.env)
             if not database:
-                print(f"✗ 错误: 无法从环境 {args.env} 推断数据库名，请使用 --database 指定")
+                log(f"✗ 错误: 无法从环境 {args.env} 推断数据库名，请使用 --database 指定")
                 return 1
 
     # 验证必需参数
@@ -290,18 +402,18 @@ def main():
                 args.env = infer_env_from_database(args.database)
 
             if not args.env:
-                print("✗ 错误: 无法从 database 推断环境，请使用 --env 指定")
+                log("✗ 错误: 无法从 database 推断环境，请使用 --env 指定")
                 return 1
 
             db_type = args.dbType or 'adb'
             new_table = call_test_table_generate(args.env, db_type, args.tablePrefix)
             if not new_table:
-                print("✗ 自动生成表失败")
+                log("✗ 自动生成表失败")
                 return 1
             table = new_table
             database = args.database
         else:
-            print("✗ 错误: 必须提供 --database 和 --table，或提供 --env 自动生成")
+            log("✗ 错误: 必须提供 --database 和 --table，或提供 --env 自动生成")
             return 1
 
     # 完善元数据
@@ -319,9 +431,51 @@ def main():
     )
 
     if result['success']:
-        return 0
+        table_info = result.get('table_info', {})
+        time_fields = result.get('time_fields', {})
+
+        extract, process = config.get_extract_process(args.scenario)
+
+        output = {
+            "status": "success",
+            "instances": [table_info.get('instance', args.env or '')],
+            "databases": [table_info.get('database', database)],
+            "tables": [table],
+            "file_info": {
+                "file_name": result.get('filename', ''),
+                "absolute_path": result.get('absolute_path', ''),
+                "relative_path": result.get('relative_path', ''),
+                "column_count": len(table_info.get('columns', [])),
+                "primary_key": table_info.get('primary_key', '')
+            },
+            "time_fields": {
+                "created_field": time_fields.get('created_field', ''),
+                "updated_field": time_fields.get('updated_field', '')
+            },
+            "config": {
+                "db_type": table_info.get('db_type', ''),
+                "scenario": args.scenario,
+                "scenario_desc": config.SCENARIOS.get(args.scenario, ''),
+                "op_type": extract or '',
+                "process_type": process or ''
+            }
+        }
     else:
-        return 1
+        output = {
+            "status": "error",
+            "error_code": "GENERATE_FAILED",
+            "message": result.get('message', '生成失败'),
+            "received_params": {
+                "database": database,
+                "table": table,
+                "scenario": args.scenario,
+                "env": args.env
+            }
+        }
+
+    print("```json\n" + json.dumps(output, ensure_ascii=False, indent=2) + "\n```")
+
+    return 0 if result['success'] else 1
 
 
 if __name__ == '__main__':

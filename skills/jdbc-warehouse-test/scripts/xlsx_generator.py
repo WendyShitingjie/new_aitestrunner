@@ -4,6 +4,8 @@ JDBC Warehouse Test Skill - XLSX 生成器
 生成符合 JDBC 批量入仓接口规范的 23 列 xlsx 文件
 """
 import os
+import sys
+import json
 import random
 from datetime import datetime
 from openpyxl import Workbook
@@ -11,6 +13,12 @@ from openpyxl.styles import Font, Alignment, PatternFill
 
 import config
 from table_reader import TableReader
+
+
+def log(msg):
+    """输出到 stderr"""
+    sys.stderr.write(str(msg) + "\n")
+    sys.stderr.flush()
 
 
 class XlsxGenerator:
@@ -35,62 +43,32 @@ class XlsxGenerator:
             dict: {'success': bool, 'file_path': str, 'message': str}
         """
         try:
-            print(f"\n{'='*60}")
-            print("JDBC 入仓测试文件生成器")
-            print(f"{'='*60}")
-            print(f"数据库: {database}")
-            print(f"表名: {table}")
-            print(f"场景: {config.SCENARIOS.get(scenario, scenario)}")
-            print(f"{'='*60}\n")
-
-            # 1. 读取表结构信息
-            print("正在读取表结构...")
             table_info = self.reader.get_table_info(database, table, env=env)
-            print(f"✓ 表结构读取成功")
-            print(f"  实例: {table_info['instance']}")
-            print(f"  数据源类型: {table_info['db_type']}")
-            print(f"  主键: {table_info['primary_key']}")
-            print(f"  字段数: {len(table_info['columns'])}")
 
-            # 2. 检查时间字段
             time_fields = self.reader.has_time_fields(table_info)
-            print(f"  时间字段: {time_fields['created_field']}, {time_fields['updated_field']}")
 
-            # 3. 验证元数据（如果是 failed_F004 场景，跳过此检查）
             if scenario != 'failed_F004':
-                print("\n正在验证元数据...")
                 metadata_exists = self.reader.verify_metadata_exists(
                     table_info['instance'],
                     table_info['database'],
                     table_info['table']
                 )
-                if not metadata_exists:
-                    print("⚠️  警告: 元数据未完善，建议先执行 metadata-complete")
-                else:
-                    print("✓ 元数据已完善")
 
-            # 4. 生成 23 列数据
-            print("\n正在生成测试数据...")
             row_data = self._generate_row_data(table_info, scenario, time_fields)
 
-            # 5. 创建 Excel 文件
-            print("正在创建 Excel 文件...")
             wb = Workbook()
             ws = wb.active
             ws.title = "批量任务"
 
-            # 写入表头
             for col_idx, header in enumerate(config.EXCEL_HEADERS, start=1):
                 cell = ws.cell(row=1, column=col_idx, value=header)
                 cell.font = Font(bold=True)
                 cell.fill = PatternFill(start_color="CCCCCC", end_color="CCCCCC", fill_type="solid")
                 cell.alignment = Alignment(horizontal='center', vertical='center')
 
-            # 写入数据行
             for col_idx, value in enumerate(row_data, start=1):
                 ws.cell(row=2, column=col_idx, value=value)
 
-            # 调整列宽
             for col in ws.columns:
                 max_length = 0
                 column = col[0].column_letter
@@ -103,7 +81,6 @@ class XlsxGenerator:
                 adjusted_width = min(max_length + 2, 50)
                 ws.column_dimensions[column].width = adjusted_width
 
-            # 6. 保存文件
             if output_path is None:
                 output_path = config.get_output_path()
 
@@ -113,31 +90,32 @@ class XlsxGenerator:
             file_path = os.path.join(output_path, filename)
 
             wb.save(file_path)
-            print(f"✓ 文件保存成功")
 
-            print(f"\n{'='*60}")
-            print("✅ 测试文件生成完成")
-            print(f"{'='*60}")
-            # 同时输出相对路径和绝对路径，供框架灵活选择
             relative_path = os.path.join(config.get_relative_output_path(), filename)
-            print(f"相对路径: {relative_path}")
-            print(f"绝对路径: {os.path.abspath(file_path)}")
-            print(f"文件名称: {filename}")
-            print(f"{'='*60}\n")
 
             return {
                 'success': True,
                 'file_path': file_path,
+                'absolute_path': os.path.abspath(file_path),
+                'relative_path': relative_path,
                 'filename': filename,
+                'table_info': table_info,
+                'time_fields': time_fields,
+                'scenario': scenario,
                 'message': '测试文件生成成功'
             }
 
         except Exception as e:
             error_msg = f"生成失败: {str(e)}"
-            print(f"\n❌ {error_msg}\n")
             return {
                 'success': False,
                 'file_path': None,
+                'absolute_path': None,
+                'relative_path': None,
+                'filename': None,
+                'table_info': None,
+                'time_fields': None,
+                'scenario': scenario,
                 'message': error_msg
             }
 
@@ -250,10 +228,12 @@ def main():
     import sys
 
     if len(sys.argv) < 3:
-        print("用法: python xlsx_generator.py <database> <table> [scenario] [env]")
-        print("\n场景类型:")
-        for key, value in config.SCENARIOS.items():
-            print(f"  {key}: {value}")
+        output = {
+            "status": "error",
+            "error": "参数不足",
+            "usage": "python xlsx_generator.py <database> <table> [scenario] [env]"
+        }
+        print("```json\n" + json.dumps(output, ensure_ascii=False, indent=2) + "\n```")
         sys.exit(1)
 
     database = sys.argv[1]
@@ -265,11 +245,31 @@ def main():
     result = generator.generate(database, table, scenario, env=env)
 
     if result['success']:
-        print(f"✅ 成功: {result['message']}")
-        print(f"📄 文件: {result['file_path']}")
+        output = {
+            "status": "success",
+            "instances": [env] if env else [],
+            "databases": [database],
+            "tables": [table],
+            "file_info": {
+                "file_name": os.path.basename(result['file_path']),
+                "absolute_path": os.path.abspath(result['file_path']),
+                "relative_path": result['file_path'],
+                "table_count": 1
+            },
+            "config": {
+                "scenario": scenario,
+                "scenario_desc": config.SCENARIOS.get(scenario, scenario)
+            },
+            "message": result['message']
+        }
+        print("```json\n" + json.dumps(output, ensure_ascii=False, indent=2) + "\n```")
         sys.exit(0)
     else:
-        print(f"❌ 失败: {result['message']}")
+        output = {
+            "status": "error",
+            "error": result['message']
+        }
+        print("```json\n" + json.dumps(output, ensure_ascii=False, indent=2) + "\n```")
         sys.exit(1)
 
 

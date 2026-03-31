@@ -13,6 +13,7 @@ import subprocess
 import sys
 import os
 import argparse
+import json
 from datetime import datetime
 from pathlib import Path
 
@@ -21,29 +22,33 @@ sys.path.insert(0, str(script_dir))
 import config
 
 
+def log(msg):
+    """输出到 stderr"""
+    sys.stderr.write(str(msg) + "\n")
+    sys.stderr.flush()
+
+
 def run_command(cmd, description):
     """执行命令并显示结果"""
-    print(f"\n{'=' * 70}")
-    print(f"正在执行: {description}")
-    print(f"{'=' * 70}")
-    print(f"命令: {' '.join(cmd)}")
-    print()
+    log(f"\n{'=' * 70}")
+    log(f"正在执行: {description}")
+    log(f"{'=' * 70}")
+    log(f"命令: {' '.join(cmd)}")
+    log("")
 
     try:
         result = subprocess.run(
             cmd,
             check=True,
-            capture_output=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
             text=True
         )
-        print(result.stdout)
-        if result.stderr:
-            print("警告:", result.stderr)
         return True
     except subprocess.CalledProcessError as e:
-        print(f"❌ 执行失败:")
-        print(e.stdout)
-        print(e.stderr)
+        log(f"❌ 执行失败:")
+        if e.stdout:
+            log(e.stdout)
         return False
 
 
@@ -58,7 +63,7 @@ def validate_table_count(count):
     if count is None or count <= 0:
         return 1
     if count > 3:
-        print("⚠️ 建议最多 3 个表便于排查问题，已自动调整为 3 个")
+        log("⚠️ 建议最多 3 个表便于排查问题，已自动调整为 3 个")
         return 3
     return count
 
@@ -78,60 +83,36 @@ def batch_workflow(
 ):
     """
     批量入仓测试文件生成完整工作流
-
-    Args:
-        instance: 实例名（如：cjjcommon）
-        database: 数据库名（如：dataops_shitingjie）
-        table_count: 表数量（1-3，默认 1）
-        table_prefix: 表名前缀（默认 batch_test）
-        db_type: 数据库类型（mysql/tidb/adb）
-        extract_method: 抽数方式（all/ins）
-        deal_method: 处理方式（all/ins/merge）
-        row_count: 每个表的数据行数（默认 10）
-        data_type: 数据类型（string/number/date/boolean/mixed）
     """
+    log("=" * 70)
+    log("批量入仓测试文件生成完整工作流")
+    log("=" * 70)
+    log(f"实例: {instance}")
+    log(f"数据库: {database}")
+    log(f"表数量: {table_count}")
+    log(f"表前缀: {table_prefix}")
+    log(f"数据库类型: {db_type}")
+    log(f"抽数方式: {extract_method}")
+    log(f"处理方式: {deal_method}")
+    log(f"场景: {scenario}")
+    log("=" * 70)
+    log("")
 
-    print("=" * 70)
-    print("批量入仓测试文件生成完整工作流")
-    print("=" * 70)
-    print(f"实例: {instance}")
-    print(f"数据库: {database}")
-    print(f"表数量: {table_count}")
-    print(f"表前缀: {table_prefix}")
-    print(f"数据库类型: {db_type}")
-    print(f"抽数方式: {extract_method}")
-    print(f"处理方式: {deal_method}")
-    print("=" * 70)
-    print()
-
-    # 验证表数量
     table_count = validate_table_count(table_count)
-
-    # 生成表名列表
     table_names = generate_table_names(table_prefix, table_count)
-    print(f"将创建以下 {table_count} 个表:")
+    
+    log(f"将创建以下 {table_count} 个表:")
     for idx, name in enumerate(table_names, 1):
-        print(f"  {idx}. {name}")
-    print()
+        log(f"  {idx}. {name}")
+    log("")
 
-    # 确认继续
-    if not auto_confirm:
-        confirm = input("是否继续？(y/n): ")
-        if confirm.lower() != 'y':
-            print("已取消")
-            return False
-    else:
-        print("自动确认模式，继续执行...")
-
-    # 获取脚本路径
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    project_root = os.path.dirname(os.path.dirname(current_dir))  # 指向 skills 目录
+    project_root = os.path.dirname(os.path.dirname(current_dir))
     skill_test_dir = os.path.join(os.path.dirname(current_dir), 'test_excel')
     test_table_script = os.path.join(project_root, "test-table/scripts/index.py")
     metadata_script = os.path.join(project_root, "metadata-complete/scripts/index.py")
     template_updater_script = os.path.join(current_dir, "template_updater.py")
 
-    # 根据实例名映射环境名
     env_mapping = {
         'cjjcommon': 'cjjcommon',
         'tidb-ares': 'tidb-ares',
@@ -142,13 +123,12 @@ def batch_workflow(
 
     created_tables = []
 
-    # Step 1: 创建测试表
-    print("\n" + "=" * 70)
-    print("步骤 1: 创建测试表")
-    print("=" * 70)
+    log("\n" + "=" * 70)
+    log("步骤 1: 创建测试表")
+    log("=" * 70)
 
     for idx, table_name in enumerate(table_names, 1):
-        print(f"\n[{idx}/{table_count}] 创建表: {table_name}")
+        log(f"\n[{idx}/{table_count}] 创建表: {table_name}")
 
         cmd = [
             'python3', test_table_script,
@@ -160,37 +140,39 @@ def batch_workflow(
             '--env', env
         ]
 
-        if run_command(cmd, f"创建��� {table_name}"):
+        if run_command(cmd, f"创建表 {table_name}"):
             created_tables.append(table_name)
-            print(f"✅ 表 {table_name} 创建成功")
+            log(f"✅ 表 {table_name} 创建成功")
         else:
-            print(f"❌ 表 {table_name} 创建失败")
-            print("是否继续创建剩余表？(y/n): ", end='')
-            if input().lower() != 'y':
-                break
+            log(f"❌ 表 {table_name} 创建失败")
+            break
 
     if len(created_tables) == 0:
-        print("\n❌ 没有成功创建任何表，工作流终止")
+        log("\n❌ 没有成功创建任何表，工作流终止")
+        output = {
+            "status": "error",
+            "error": "没有成功创建任何表"
+        }
+        print("```json\n" + json.dumps(output, ensure_ascii=False, indent=2) + "\n```")
         return False
 
-    print(f"\n✅ 成功创建 {len(created_tables)}/{table_count} 个表")
+    log(f"\n✅ 成功创建 {len(created_tables)}/{table_count} 个表")
 
-    # Step 2: 完善元数据（根据场景配置决定）
     if config.is_skip_metadata(scenario):
-        print("\n" + "=" * 70)
-        print(f"步骤 2: 跳过元数据完善（{scenario} 场景）")
-        print("=" * 70)
+        log("\n" + "=" * 70)
+        log(f"步骤 2: 跳过元数据完善（{scenario} 场景）")
+        log("=" * 70)
         completed_tables = created_tables
-        print("✅ 跳过元数据完善步骤，表将保持未完善状态")
+        log("✅ 跳过元数据完善步骤，表将保持未完善状态")
     else:
-        print("\n" + "=" * 70)
-        print("步骤 2: 完善元数据")
-        print("=" * 70)
+        log("\n" + "=" * 70)
+        log("步骤 2: 完善元数据")
+        log("=" * 70)
 
         completed_tables = []
 
         for idx, table_name in enumerate(created_tables, 1):
-            print(f"\n[{idx}/{len(created_tables)}] 完善表元数据: {table_name}")
+            log(f"\n[{idx}/{len(created_tables)}] 完善表元数据: {table_name}")
 
             cmd = [
                 'python3', metadata_script,
@@ -201,31 +183,30 @@ def batch_workflow(
 
             if run_command(cmd, f"完善表 {table_name} 的元数据"):
                 completed_tables.append(table_name)
-                print(f"✅ 表 {table_name} 元数据完善成功")
+                log(f"✅ 表 {table_name} 元数据完善成功")
             else:
-                print(f"❌ 表 {table_name} 元数据完善失败")
-                print("是否继续处理剩余表？(y/n): ", end='')
-                if input().lower() != 'y':
-                    break
+                log(f"❌ 表 {table_name} 元数据完善失败")
+                break
 
     if len(completed_tables) == 0:
-        print("\n❌ 没有成功完善任何表的元数据，工作流终止")
+        log("\n❌ 没有成功完善任何表的元数据，工作流终止")
+        output = {
+            "status": "error",
+            "error": "没有成功完善任何表的元数据"
+        }
+        print("```json\n" + json.dumps(output, ensure_ascii=False, indent=2) + "\n```")
         return False
 
-    print(f"\n✅ 成功完善 {len(completed_tables)}/{len(created_tables)} 个表的元数据")
+    log(f"\n✅ 成功完善 {len(completed_tables)}/{len(created_tables)} 个表的元数据")
 
-    # Step 3: 生成批量上传文件
-    print("\n" + "=" * 70)
-    print("步骤 3: 生成批量上传文件")
-    print("=" * 70)
+    log("\n" + "=" * 70)
+    log("步骤 3: 生成批量上传文件")
+    log("=" * 70)
 
-    # 根据场景选择生成器
-    # success: 使用 template_updater.py（正常模板）
-    # failed_F001/F002/F003/F004: 使用 xlsx_generator.py（场景失败数据）
     failed_scenarios = ['failed_F001', 'failed_F002', 'failed_F003', 'failed_F004']
 
     if scenario in failed_scenarios:
-        print(f"使用场景失败模式生成文件: {scenario}")
+        log(f"使用场景失败模式生成文件: {scenario}")
         generator_script = os.path.join(current_dir, "xlsx_generator.py")
 
         for table_name in completed_tables:
@@ -237,15 +218,20 @@ def batch_workflow(
                 instance
             ]
 
-            if run_command(cmd, f"生成 {scenario} 场景测试文件"):
-                print(f"✅ 表 {table_name} 测试文件生成成功")
-            else:
-                print(f"❌ 表 {table_name} 测试文件生成失败")
+            if not run_command(cmd, f"生成 {scenario} 场景测试文件"):
+                log(f"❌ 表 {table_name} 测试文件生成失败")
+                output = {
+                    "status": "error",
+                    "error": f"表 {table_name} 测试文件生成失败"
+                }
+                print("```json\n" + json.dumps(output, ensure_ascii=False, indent=2) + "\n```")
                 return False
+            else:
+                log(f"✅ 表 {table_name} 测试文件生成成功")
 
         output_file = os.path.join(skill_test_dir, f"batch_{scenario}_latest.xlsx")
     else:
-        print("使用正常模板模式生成文件")
+        log("使用正常模板模式生成文件")
         cmd = [
             'python3', template_updater_script,
             instance,
@@ -257,125 +243,91 @@ def batch_workflow(
         ]
 
         if not run_command(cmd, "生成批量上传文件"):
-            print(f"\n❌ 批量上传文件生成失败")
+            log(f"\n❌ 批量上传文件生成失败")
+            output = {
+                "status": "error",
+                "error": "批量上传文件生成失败"
+            }
+            print("```json\n" + json.dumps(output, ensure_ascii=False, indent=2) + "\n```")
             return False
 
         output_file = os.path.join(skill_test_dir, "batch_test_latest.xlsx")
 
-    print(f"\n✅ 批量上传文件生成成功")
-    print(f"   包含 {len(completed_tables)} 个表的配置")
-    # 同时输出相对路径和绝对路径，供框架灵活选择
+    absolute_path = os.path.abspath(output_file)
     relative_path = os.path.join(config.get_relative_output_path(), os.path.basename(output_file))
-    print(f"相对路径: {relative_path}")
-    print(f"绝对路径: {os.path.abspath(output_file)}")
 
-    print("\n" + "=" * 70)
-    print("工作流完成！")
-    print("=" * 70)
-    print("\n后续步骤:")
-    print("1. 上传测试:")
-    print("   python batch_upload_validate.py \\")
-    print('     "test_excel/batch_test_latest.xlsx"')
-    print()
-    print("2. 查询结果:")
-    print("   python batch_query_result.py <taskId>")
-    print()
-    print("3. 提交任务:")
-    print("   python batch_submit_task.py <taskId>")
-    print()
+    log(f"\n✅ 批量上传文件生成成功")
+    log(f"   包含 {len(completed_tables)} 个表的配置")
+    log(f"相对路径: {relative_path}")
+    log(f"绝对路径: {absolute_path}")
 
+    log("\n" + "=" * 70)
+    log("工作流完成！")
+    log("=" * 70)
+
+    output = {
+        "status": "success",
+        "instances": [instance],
+        "databases": [database],
+        "tables": completed_tables,
+        "file_info": {
+            "file_name": os.path.basename(output_file),
+            "absolute_path": absolute_path,
+            "relative_path": relative_path,
+            "table_count": len(completed_tables)
+        },
+        "config": {
+            "db_type": db_type,
+            "scenario": scenario,
+            "scenario_desc": config.SCENARIOS.get(scenario, scenario),
+            "op_type": extract_method,
+            "process_type": deal_method
+        }
+    }
+
+    print("```json\n" + json.dumps(output, ensure_ascii=False, indent=2) + "\n```")
     return True
 
 
 def main():
-    """命令行入口"""
     parser = argparse.ArgumentParser(
         description='批量入仓测试文件生成完整工作流',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 示例:
-  # 基本用法（默认 1 个表）
   python batch_workflow.py cjjcommon dataops_shitingjie
-
-  # 指定 3 个表
   python batch_workflow.py cjjcommon dataops_shitingjie --count 3
-
-  # TiDB 环境 2 个表
   python batch_workflow.py tidb-ares ares --count 2 --db-type tidb
-
-  # 自定义表名前缀和数据行数
-  python batch_workflow.py cjjcommon dataops_shitingjie --count 3 \\
-    --prefix my_test --row-count 20
         """
     )
 
     parser.add_argument('instance', help='实例名（如：cjjcommon）')
     parser.add_argument('database', help='数据库名（如：dataops_shitingjie）')
-    parser.add_argument('--count', type=int, default=1,
-                        help='表数量（1-3，默认 1）')
-    parser.add_argument('--prefix', default='batch_test',
-                        help='表名前缀（默认 batch_test）')
-    parser.add_argument('--db-type', default='mysql',
-                        choices=['mysql', 'tidb', 'adb'],
-                        help='数据库类型（默认 mysql）')
-    parser.add_argument('--extract-method', default='ins',
-                        choices=['all', 'ins'],
-                        help='抽数方式（��认 ins）')
-    parser.add_argument('--deal-method', default='merge',
-                        choices=['all', 'ins', 'merge'],
-                        help='处理方式（默认 merge）')
-    parser.add_argument('--row-count', type=int, default=10,
-                        help='每个表的数据行数（默认 10）')
-    parser.add_argument('--data-type', default='mixed',
-                        choices=['string', 'number', 'date', 'boolean', 'mixed'],
-                        help='数据类型（默认 mixed）')
-    parser.add_argument('--yes', '-y', action='store_true',
-                        help='自动确认，跳过交互式提示')
-    parser.add_argument('--scenario', default='success',
-                        help='场景类型：success, failed_F001, failed_F002, failed_F003, failed_F004')
+    parser.add_argument('--count', type=int, default=1, help='表数量（默认 1，最大 3）')
+    parser.add_argument('--prefix', default='batch_test', help='表名前缀（默认 batch_test）')
+    parser.add_argument('--db-type', default='mysql', help='数据库类型（默认 mysql）')
+    parser.add_argument('--extract-method', default='ins', help='抽数方式（默认 ins）')
+    parser.add_argument('--deal-method', default='merge', help='处理方式（默认 merge）')
+    parser.add_argument('--row-count', type=int, default=10, help='数据行数（默认 10）')
+    parser.add_argument('--data-type', default='mixed', help='数据类型（默认 mixed）')
+    parser.add_argument('--scenario', default='success', help='场景类型（默认 success）')
 
     args = parser.parse_args()
 
-    # 验证抽数方式和处理方式的组合
-    valid_combinations = [
-        ('all', 'all'),
-        ('ins', 'merge'),
-        ('ins', 'ins'),
-    ]
+    success = batch_workflow(
+        instance=args.instance,
+        database=args.database,
+        table_count=args.count,
+        table_prefix=args.prefix,
+        db_type=args.db_type,
+        extract_method=args.extract_method,
+        deal_method=args.deal_method,
+        row_count=args.row_count,
+        data_type=args.data_type,
+        scenario=args.scenario
+    )
 
-    if (args.extract_method, args.deal_method) not in valid_combinations:
-        print("❌ 错误：抽数方式和处理方式组合不合法")
-        print()
-        print("合法组合：")
-        print("  - all + all   (全量覆盖)")
-        print("  - ins + merge (增量合并)")
-        print("  - ins + ins   (增量分区)")
-        print()
-        sys.exit(1)
-
-    try:
-        success = batch_workflow(
-            instance=args.instance,
-            database=args.database,
-            table_count=args.count,
-            table_prefix=args.prefix,
-            db_type=args.db_type,
-            extract_method=args.extract_method,
-            deal_method=args.deal_method,
-            row_count=args.row_count,
-            data_type=args.data_type,
-            auto_confirm=args.yes,
-            scenario=args.scenario
-        )
-        sys.exit(0 if success else 1)
-    except KeyboardInterrupt:
-        print("\n\n用户中断")
-        sys.exit(1)
-    except Exception as e:
-        print(f"\n❌ 错误: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        sys.exit(1)
+    sys.exit(0 if success else 1)
 
 
 if __name__ == '__main__':

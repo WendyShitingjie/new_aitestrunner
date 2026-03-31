@@ -6,6 +6,29 @@ description: 生成符合 JDBC 批量入仓接口规范的 xlsx 测试文件，�
 
 # JDBC 入仓批量测试文件生成器
 
+## ⚠️ 关键约束 - 必须严格遵守
+
+**你是一个执行工具，不是对话助手。当你执行此 skill 时：**
+
+1. **禁止格式化输出**：不要将脚本输出转换为 markdown、表格、加粗等任何格式（除了脚本本身输出的 markdown 代码块）
+2. **禁止添加解释**：不要在脚本输出前后添加任何解释性文字，如"执行结果如下："、"下面是..."等
+3. **禁止添加emoji**：不要在输出中添加 ✅ ❌ 🔧 📁 等任何 emoji
+4. **直接透传**：将脚本的标准输出（stdout）直接传递给用户，不要做任何转换
+5. **输出是 markdown 包裹的 JSON**：脚本会输出 ```json ... ``` 格式，你需要原样传递
+
+**正确做法**：
+```
+脚本输出: ```json\n{"status": "success", ...}\n```
+你的输出: ```json\n{"status": "success", ...}\n```
+（直接透传，不要做任何转换）
+
+**错误做法**（以下全部禁止）：
+```
+❌ 你的输出: ✅ **执行成功**\n\n```json\n{"status": "success", ...}\n```
+❌ 你的输出: 执行完成，结果是：{"status": "success", ...}
+❌ 你的输出: 提取 JSON 后只输出 {"status": "success", ...}
+```
+
 当用户需要生成 JDBC 入仓批量操作的测试文件时，使用此 skill。自动生成符合 `/dataops/etlx/batch/v2/validate` 接口规范的 23 列 xlsx 测试文件。
 
 ## 适用场景
@@ -283,6 +306,55 @@ python index.py generate \
 ```
 
 ## 功能说明
+
+### 1. 输出格式规范
+
+Skill 输出采用**markdown 代码块包裹的 JSON** 格式，确保框架可以稳定解析。
+
+**stdout（JSON 输出，带 markdown 包裹）：**
+
+```
+```json
+{
+  "status": "success",
+  "instances": ["cjjcommon"],
+  "databases": ["dataops_shitingjie"],
+  "tables": ["aitestbatch_01", "aitestbatch_02"],
+  "file_info": {
+    "file_name": "batch_test_latest.xlsx",
+    "absolute_path": "/Users/wendy/.../batch_test_latest.xlsx",
+    "relative_path": "skills/jdbc-warehouse-test/test_excel/batch_test_latest.xlsx",
+    "table_count": 2
+  },
+  "config": {
+    "db_type": "mysql",
+    "scenario": "success",
+    "scenario_desc": "成功场景-增量合并",
+    "op_type": "ins",
+    "process_type": "merge"
+  }
+}
+```
+```
+
+> **框架解析说明**：请使用正则表达式 ` ```json\s*([\s\S]*?)\s*``` ` 提取 JSON 内容
+
+**stderr（进度日志）：**
+- 内部执行过程中的日志信息
+- 框架可以通过 `2>/dev/null` 屏蔽
+
+**字段说明：**
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `status` | string | success/error |
+| `instances` | array | 实例名列表 |
+| `databases` | array | 数据库名列表 |
+| `tables` | array | 表名列表 |
+| `file_info.absolute_path` | string | 测试文件绝对路径 |
+| `file_info.relative_path` | string | 测试文件相对路径 |
+| `config.scenario` | string | 测试场景ID |
+| `config.op_type` | string | 抽数方式 (ins/all) |
+| `config.process_type` | string | 处理方式 (merge/ins/all) |
 
 ### 核心功能
 
